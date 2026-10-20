@@ -281,9 +281,11 @@ public class SolarMonitorService : IHostedService, IDisposable
                 // PV data
                 Pv1Power = deviceData.Pv1Power ?? 0,
                 Pv1Voltage = deviceData.Pv1Voltage ?? 0,
+                Pv1Current = deviceData.Pv1Current,
 
-                Pv2Power = deviceData.Pv2Power ,
+                Pv2Power = deviceData.Pv2Power,
                 Pv2Voltage = deviceData.Pv2Voltage,
+                Pv2Current = deviceData.Pv2Current,
 
                 PvTotalPower = deviceData.TotalPvPower ?? 0,
 

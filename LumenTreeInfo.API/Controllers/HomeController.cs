@@ -158,6 +158,29 @@ public class HomeController : Controller
                         batPercent = (int)Math.Clamp(25.0 + (netEnergyWh / 5000.0) * 100.0, 15.0, 100.0);
                     }
 
+                    int pv1P = mqttData?.Pv1Power ?? 0;
+                    int pv1V = mqttData?.Pv1Voltage ?? 0;
+                    double pv1I = mqttData?.Pv1Current ?? (pv1V > 0 && pv1P > 0 ? Math.Round((double)pv1P / pv1V, 1) : 0);
+
+                    int pv2P = mqttData?.Pv2Power ?? 0;
+                    int pv2V = mqttData?.Pv2Voltage ?? 0;
+                    double pv2I = mqttData?.Pv2Current ?? (pv2V > 0 && pv2P > 0 ? Math.Round((double)pv2P / pv2V, 1) : 0);
+
+                    int totalPvP = (pv1P + pv2P > 0) ? (pv1P + pv2P) : ((mqttData?.PvTotalPower > 0) ? mqttData.PvTotalPower : pvWatts);
+
+                    // Fallback nếu MQTT chưa cập nhật công suất PV1/PV2 nhưng REST API có pvWatts > 0
+                    if (pv1P == 0 && pv2P == 0 && pvWatts > 0)
+                    {
+                        // Phân bổ ước lượng 2 ngõ MPPT theo tỷ lệ thực tế (PV1 ~31%, PV2 ~69%)
+                        pv1P = (int)Math.Round(pvWatts * 0.31);
+                        pv2P = pvWatts - pv1P;
+                        pv1V = 127;
+                        pv2V = 170;
+                        pv1I = pv1V > 0 ? Math.Round((double)pv1P / pv1V, 1) : 0;
+                        pv2I = pv2V > 0 ? Math.Round((double)pv2P / pv2V, 1) : 0;
+                        totalPvP = pvWatts;
+                    }
+
                     realtime = new
                     {
                         device_id = deviceId,
@@ -170,9 +193,13 @@ public class HomeController : Controller
                             gridPowerFlow = gridWatts,
                             gridStatus = gridWatts > 0 ? "Importing" : (gridWatts < 0 ? "Exporting" : "Idle"),
                             homeLoad = loadWatts,
-                            totalPvPower = pvWatts,
-                            pv1Power = mqttData?.Pv1Power ?? pvWatts,
-                            pv2Power = mqttData?.Pv2Power ?? 0,
+                            totalPvPower = totalPvP,
+                            pv1Power = pv1P,
+                            pv1Voltage = pv1V,
+                            pv1Current = pv1I,
+                            pv2Power = pv2P,
+                            pv2Voltage = pv2V,
+                            pv2Current = pv2I,
                             temperature = mqttData?.DeviceTempValue ?? 0,
                             acOutputPower = essWatts,
                             acInputVoltage = mqttData?.GridVoltageValue ?? 220

@@ -45,10 +45,10 @@ Một ứng dụng web toàn diện để giám sát và trực quan hóa dữ l
 - Chế độ làm việc
 - Trạng thái online
 
-### Sản lượng PV (Năng lượng mặt trời)
-- Điện áp PV1 và PV2 (V)
-- Công suất PV1 và PV2 (W)
-- Tổng công suất sản xuất PV
+### Sản lượng PV (Năng lượng mặt trời - 2 Đầu Vào MPPT)
+- **Đầu vào quang điện 1 (PV1 / MPPT 1):** Điện áp (V), Công suất (W), Dòng điện (A)
+- **Đầu vào quang điện 2 (PV2 / MPPT 2):** Điện áp (V), Công suất (W), Dòng điện (A)
+- Tổng công suất sản xuất PV thời gian thực (W) và tổng sản lượng hôm nay (kWh)
 
 ![Sản lượng PV](https://github.com/nsknet/lumentree-dashboard/blob/main/screenshots/screenshot2.png?raw=true)
 

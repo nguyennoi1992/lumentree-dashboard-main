@@ -31,5 +31,7 @@ public class DeviceRealTimeData(string deviceId)
     public int? Pv2Power { get; set; }
     public int Pv1Voltage { get; set; }
     public int? Pv2Voltage { get; set; }
+    public double? Pv1Current { get; set; }
+    public double? Pv2Current { get; set; }
     public int PvTotalPower { get; set; }
 }

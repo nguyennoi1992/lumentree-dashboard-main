@@ -594,6 +594,7 @@ document.addEventListener('DOMContentLoaded', function () {
         showElement('summaryStats');
         showElement('chart-section');
         showElement('realTimeFlow');
+        showElement('pvInputsSection');
         showElement('batteryCellSection'); // Always show, will display waiting message
         showElement('socChartSection');
 
@@ -621,9 +622,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 deviceId: data.deviceInfo?.deviceId || '',
                 pvTotalPower: rd.totalPvPower || 0,
                 pv1Power: rd.pv1Power || 0,
-                pv2Power: rd.pv2Power || 0,
                 pv1Voltage: rd.pv1Voltage || 0,
+                pv1Current: rd.pv1Current,
+                pv2Power: rd.pv2Power || 0,
                 pv2Voltage: rd.pv2Voltage || 0,
+                pv2Current: rd.pv2Current,
                 gridValue: rd.gridPowerFlow || 0,
                 gridVoltageValue: rd.acInputVoltage ?? 220,
                 batteryPercent: rd.batterySoc || 0,
@@ -697,6 +700,35 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             updateValue('pv-desc', `${data.pv1Voltage}V`);
         }
+
+        // Cập nhật 2 đầu vào quang điện (MPPT 1 & MPPT 2) tương tự App Android Lumentree
+        const pv1V = data.pv1Voltage || 0;
+        const pv1P = data.pv1Power || 0;
+        let pv1I = '0.0';
+        if (typeof data.pv1Current === 'number' && data.pv1Current > 0) {
+            pv1I = data.pv1Current.toFixed(1);
+        } else if (pv1V > 0 && pv1P > 0) {
+            pv1I = (pv1P / pv1V).toFixed(1);
+        }
+
+        const pv2V = data.pv2Voltage || 0;
+        const pv2P = data.pv2Power || 0;
+        let pv2I = '0.0';
+        if (typeof data.pv2Current === 'number' && data.pv2Current > 0) {
+            pv2I = data.pv2Current.toFixed(1);
+        } else if (pv2V > 0 && pv2P > 0) {
+            pv2I = (pv2P / pv2V).toFixed(1);
+        }
+
+        const totalPvLive = data.pvTotalPower || (pv1P + pv2P);
+        updateValue('pv-total-live', `${totalPvLive} W`);
+        updateValue('pv1-voltage', `${pv1V} V`);
+        updateValue('pv1-power', `${pv1P} W`);
+        updateValue('pv1-current', `${pv1I} A`);
+
+        updateValue('pv2-voltage', `${pv2V} V`);
+        updateValue('pv2-power', `${pv2P} W`);
+        updateValue('pv2-current', `${pv2I} A`);
 
         // Grid - with blink effect
         updateValue('grid-power', `${data.gridValue}W`);

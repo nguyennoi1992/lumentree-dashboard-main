@@ -477,6 +477,7 @@ public class SolarInverterMonitor : IDisposable
             // Map registers to their addresses for easier access
             _deviceDataMap.Clear();
             for (var i = 0; i < registers.Count; i++) _deviceDataMap[i.ToString()] = registers[i];
+            Log.Debug($"[DEBUG REGISTERS {deviceId}] Total {registers.Count}: " + string.Join(", ", registers.Select((r, i) => $"R{i}={r}({Convert.ToInt32(r, 16)})")));
 
             // Create device data model
             var deviceData = new DeviceData
@@ -512,19 +513,62 @@ public class SolarInverterMonitor : IDisposable
 
             if (registers.Count > 70) deviceData.MasterSlaveStatus = Convert.ToInt32(registers[70], 16);
 
-            if (registers.Count > 24)
+            if (registers.Count > 60)
             {
-                var deviceTemp = (Convert.ToInt32(registers[24], 16) - 1000) / 10.0;
-                deviceData.TemperatureCelsius = deviceTemp;
-                deviceData.TemperatureFahrenheit = deviceTemp * 1.8 + 32;
+                var tempRaw = Convert.ToInt32(registers[60], 16);
+                if (tempRaw is > 0 and < 120)
+                {
+                    deviceData.TemperatureCelsius = tempRaw;
+                    deviceData.TemperatureFahrenheit = tempRaw * 1.8 + 32;
+                }
+            }
+
+            if (deviceData.TemperatureCelsius == null && registers.Count > 24)
+            {
+                var raw24 = Convert.ToInt32(registers[24], 16);
+                if (raw24 is > 1000 and < 2000)
+                {
+                    var deviceTemp = (raw24 - 1000) / 10.0;
+                    deviceData.TemperatureCelsius = deviceTemp;
+                    deviceData.TemperatureFahrenheit = deviceTemp * 1.8 + 32;
+                }
             }
 
             // Extract battery information
             if (registers.Count > 11) deviceData.BatteryVoltage = Convert.ToInt32(registers[11], 16) / 100.0;
 
-            if (registers.Count > 50) deviceData.BatteryChargePercentage = Convert.ToInt32(registers[50], 16);
+            // R63 chứa SOC pin chính xác (0-100%)
+            if (registers.Count > 63)
+            {
+                var soc = Convert.ToInt32(registers[63], 16);
+                if (soc is > 0 and <= 100)
+                {
+                    deviceData.BatteryChargePercentage = soc;
+                }
+            }
 
-            if (registers.Count > 61)
+            if (deviceData.BatteryChargePercentage == null && registers.Count > 50)
+            {
+                var soc50 = Convert.ToInt32(registers[50], 16);
+                if (soc50 is > 0 and <= 100)
+                {
+                    deviceData.BatteryChargePercentage = soc50;
+                }
+            }
+
+            // R88 chứa dòng công suất pin thực tế theo đơn vị 0.1W (âm = đang sạc, dương = đang xả)
+            if (registers.Count > 88)
+            {
+                var batteryPower88 = GetSignedValue(registers[88]);
+                if (batteryPower88 != 0)
+                {
+                    var batWatts = (int)Math.Round(batteryPower88 / 10.0);
+                    deviceData.BatteryPower = Math.Abs(batWatts);
+                    deviceData.BatteryStatus = batWatts < 0 ? "Charging" : "Discharging";
+                }
+            }
+
+            if (deviceData.BatteryPower == null && registers.Count > 61)
             {
                 var batteryPower = GetSignedValue(registers[61]);
                 deviceData.BatteryPower = Math.Abs(batteryPower);
@@ -572,24 +616,59 @@ public class SolarInverterMonitor : IDisposable
             // Extract load information
             if (registers.Count > 67) deviceData.HomeLoad = Convert.ToInt32(registers[67], 16);
 
-            // Extract PV Input information
-            if (registers.Count > 20) deviceData.Pv1Voltage = Convert.ToInt32(registers[20], 16);
+            // Extract PV Input information (PV1 & PV2 MPPT Inputs)
+            // Chuẩn hóa theo kiến trúc app Android LightEarth cho biến tần Lumentree 6kW dual MPPT:
+            // R78: Điện áp PV1 (V) - ví dụ 127V..129V
+            // R94: Công suất PV1 (W) - ví dụ 660W..839W
+            // R72: Điện áp PV2 (V) - ví dụ 140V..170V
+            // R93: Công suất PV2 (W) - ví dụ 1502W..1873W
+            // Dòng điện (A) = Công suất / Điện áp (tính tương đương LightEarth app)
+            int pv1V = 0;
+            int pv1P = 0;
+            int pv2V = 0;
+            int pv2P = 0;
 
-            if (registers.Count > 22) deviceData.Pv1Power = Convert.ToInt32(registers[22], 16);
-
-            if (registers.Count is > 72 and > 74)
+            if (registers.Count > 94)
             {
-                var pv2Voltage = Convert.ToInt32(registers[72], 16);
-                var pv2Power = Convert.ToInt32(registers[74], 16);
+                int r78 = Convert.ToInt32(registers[78], 16);
+                int r94 = Convert.ToInt32(registers[94], 16);
+                int r72 = Convert.ToInt32(registers[72], 16);
+                int r93 = Convert.ToInt32(registers[93], 16);
 
-                if (pv2Voltage > 0)
+                if (r78 > 0 || r94 > 0 || r72 > 0 || r93 > 0)
                 {
-                    deviceData.Pv2Voltage = pv2Voltage;
-                    deviceData.Pv2Power = pv2Power;
-                    deviceData.TotalPvPower = deviceData.Pv1Power + pv2Power;
+                    pv1V = r78;
+                    pv1P = r94;
+                    pv2V = r72;
+                    pv2P = r93;
                 }
-                else
-                    deviceData.TotalPvPower = deviceData.Pv1Power;
+            }
+
+            // Fallback: nếu R93/R94 không có hoặc bằng 0, thử các thanh ghi legacy (loại trừ giá trị ảo 6666 = 0x1a0a)
+            if (pv1V == 0 && pv1P == 0 && registers.Count > 22)
+            {
+                int legacyV = Convert.ToInt32(registers[20], 16);
+                int legacyP = Convert.ToInt32(registers[22], 16);
+                if (legacyP != 6666)
+                {
+                    pv1V = legacyV;
+                    pv1P = legacyP;
+                }
+            }
+
+            deviceData.Pv1Voltage = pv1V;
+            deviceData.Pv1Power = pv1P;
+            deviceData.Pv1Current = (pv1V > 0 && pv1P > 0) ? Math.Round((double)pv1P / pv1V, 1) : 0.0;
+
+            deviceData.Pv2Voltage = pv2V;
+            deviceData.Pv2Power = pv2P;
+            deviceData.Pv2Current = (pv2V > 0 && pv2P > 0) ? Math.Round((double)pv2P / pv2V, 1) : 0.0;
+
+            deviceData.TotalPvPower = pv1P + pv2P;
+            if (deviceData.TotalPvPower == 0 && registers.Count > 90)
+            {
+                int r90 = Convert.ToInt32(registers[90], 16);
+                if (r90 > 0) deviceData.TotalPvPower = r90;
             }
 
             // Extract settings
