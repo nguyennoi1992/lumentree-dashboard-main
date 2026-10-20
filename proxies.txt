@@ -1,0 +1,9 @@
+# Danh sách proxy free cho Lumentree Dashboard (API & MQTT)
+# Định dạng: host:port hoặc protocol://host:port
+# Hỗ trợ HTTP (CONNECT tunnel) và SOCKS5
+http://45.125.64.215:443
+http://81.19.210.10:80
+http://43.153.195.69:80
+http://4.144.146.21:80
+http://45.194.41.16:8080
+http://154.201.126.94:8080
