@@ -614,7 +614,10 @@ public class SolarInverterMonitor : IDisposable
             }
 
             // Extract load information
-            if (registers.Count > 67) deviceData.HomeLoad = Convert.ToInt32(registers[67], 16);
+            // Với biến tần Lumentree 6kW hòa lưới bám tải, R18 (AcOutputPower) là công suất AC Inverter phát ra cấp cho phụ tải gia đình (HomeLoad / Tải hòa lưới).
+            // Nếu R67 > 0 thì dùng R67, ngược lại ánh xạ chuẩn xác từ AcOutputPower (R18).
+            int homeLoadFromReg = (registers.Count > 67) ? Convert.ToInt32(registers[67], 16) : 0;
+            deviceData.HomeLoad = (homeLoadFromReg > 0) ? homeLoadFromReg : (deviceData.AcOutputPower ?? 0);
 
             // Extract PV Input information (PV1 & PV2 MPPT Inputs)
             // Chuẩn hóa theo kiến trúc app Android LightEarth cho biến tần Lumentree 6kW dual MPPT:

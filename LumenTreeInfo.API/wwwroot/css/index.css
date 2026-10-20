@@ -126,8 +126,17 @@ canvas:hover {
     filter: grayscale(100%);
 }
 
+.flow-item {
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.flow-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.08), 0 6px 8px -4px rgba(0, 0, 0, 0.06);
+}
+
 .flow-item.inactive img {
-    opacity: 0.5;
+    opacity: 0.45;
     filter: grayscale(100%);
 }
 

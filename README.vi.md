@@ -71,13 +71,14 @@ Một ứng dụng web toàn diện để giám sát và trực quan hóa dữ l
 - Tần số đầu vào AC (Hz)
 - Dòng công suất lưới điện (W) - trạng thái nhập/xuất
 
-### Dữ liệu tiêu thụ
-- Tiêu thụ tải nhà (W)
-- Tiêu thụ tải thiết yếu (W)
+### Dữ liệu tiêu thụ & Cổng tải (Đồng bộ chuẩn App LightEarth)
+- **Tải Gia Đình (Hòa Lưới - Home Load):** Công suất biến tần hòa vào mạng điện gia đình (W) lấy từ ngõ AC Output (R18/R67), biểu tượng Ngôi nhà chính hãng.
+- **Tải Thiết Yếu (Cổng Load Dự Phòng - Essential Load):** Cổng phụ EPS/UPS cho thiết bị ưu tiên khi cúp điện (W), biểu tượng Cổng load chính hãng.
+- **Bộ Icon Đồ Họa Chính Hãng:** Trích xuất từ ứng dụng Android LightEarth 3.2.6 (`device_detail_graph_icon_*.png`).
 
 ### Phân tích dòng năng lượng
 - Tỷ lệ tự tiêu thụ (%)
-- Trực quan hóa dòng năng lượng giữa PV, pin, lưới điện và nhà
+- Trực quan hóa dòng năng lượng thời gian thực giữa Quang Điện (Dual MPPT), Pin, Biến tần, Lưới điện và Tải gia đình
 
 ## Bắt đầu
 

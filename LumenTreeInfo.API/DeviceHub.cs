@@ -181,8 +181,9 @@ public class SolarMonitorService : IHostedService, IDisposable
                                     BatteryPercent = prevData?.BatteryPercent ?? 0,
                                     BatteryVoltage = prevData?.BatteryVoltage ?? 0,
                                     DeviceTempValue = prevData?.DeviceTempValue ?? 0,
-                                    EssentialValue = essWatts,
-                                    LoadValue = loadWatts,
+                                    // Tải gia đình hòa lưới là loadWatts; Tải thiết yếu cổng load là essWatts
+                                    LoadValue = (loadWatts > 0) ? loadWatts : essWatts,
+                                    EssentialValue = (essWatts != loadWatts && loadWatts > 0) ? essWatts : 0,
                                     Timestamp = DateTime.UtcNow
                                 };
 
@@ -304,11 +305,20 @@ public class SolarMonitorService : IHostedService, IDisposable
                 // Device data
                 DeviceTempValue = Convert.ToInt32(deviceData.TemperatureCelsius ?? 0),
 
-                // Load data (hoán đổi theo yêu cầu)
-                // EssentialValue = Tải cổng load = AcOutputPower
-                // LoadValue = Tải hòa lưới = HomeLoad
-                EssentialValue = deviceData.AcOutputPower ?? 0,
-                LoadValue = deviceData.HomeLoad ?? 0,
+                // Load data: Chuẩn hóa theo kiến trúc app Android LightEarth
+                // LoadValue: Tải hòa lưới / Tải gia đình (Home Load)
+                // - Lumentree 6kW cấp điện hòa vào lưới nội bộ cấp cho thiết bị gia đình qua ngõ AC Output (R18).
+                // - Ưu tiên HomeLoad (nếu > 0) hoặc AcOutputPower (R18).
+                LoadValue = (deviceData.HomeLoad.HasValue && deviceData.HomeLoad.Value > 0)
+                    ? deviceData.HomeLoad.Value
+                    : (deviceData.AcOutputPower ?? 0),
+
+                // EssentialValue: Tải thiết yếu / Cổng load dự phòng (Essential Load / Backup EPS Port)
+                // - Cổng EPS/Backup dành riêng cho thiết bị ưu tiên khi cúp điện.
+                // - Ở trạng thái bình thường hòa lưới bám tải không có phụ tải cổng backup riêng thì bằng 0.
+                EssentialValue = (deviceData.UpsMode == true && deviceData.HomeLoad.HasValue && deviceData.AcOutputPower.HasValue && deviceData.AcOutputPower.Value > deviceData.HomeLoad.Value)
+                    ? (deviceData.AcOutputPower.Value - deviceData.HomeLoad.Value)
+                    : 0,
 
                 // Timestamp
                 Timestamp = deviceData.Timestamp

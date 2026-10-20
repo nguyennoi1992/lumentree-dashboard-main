@@ -201,7 +201,8 @@ public class HomeController : Controller
                             pv2Voltage = pv2V,
                             pv2Current = pv2I,
                             temperature = mqttData?.DeviceTempValue ?? 0,
-                            acOutputPower = essWatts,
+                            acOutputPower = loadWatts,
+                            essentialPower = essWatts,
                             acInputVoltage = mqttData?.GridVoltageValue ?? 220
                         }
                     };
@@ -336,7 +337,8 @@ public class HomeController : Controller
                     pv1Power = mqttData.Pv1Power,
                     pv2Power = mqttData.Pv2Power ?? 0,
                     temperature = mqttData.DeviceTempValue,
-                    acOutputPower = mqttData.EssentialValue,
+                    acOutputPower = mqttData.LoadValue,
+                    essentialPower = mqttData.EssentialValue,
                     acInputVoltage = mqttData.GridVoltageValue
                 },
                 cells = new {

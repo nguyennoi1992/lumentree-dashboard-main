@@ -633,8 +633,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 batteryValue: rd.batteryPower || 0,
                 batteryStatus: rd.batteryStatus || "Idle",
                 deviceTempValue: rd.temperature || 0,
-                essentialValue: rd.acOutputPower || 0,
-                loadValue: rd.homeLoad || 0,
+                essentialValue: rd.essentialPower !== undefined ? rd.essentialPower : 0,
+                loadValue: (rd.homeLoad !== undefined && rd.homeLoad > 0) ? rd.homeLoad : (rd.acOutputPower || 0),
                 timestamp: data.timestamp || new Date().toISOString()
             });
         }
