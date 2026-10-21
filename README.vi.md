@@ -20,6 +20,7 @@ Một ứng dụng web toàn diện để giám sát và trực quan hóa dữ l
 - **Hiển thị thông tin thiết bị** với các chỉ báo trạng thái
 - **Điều hướng theo ngày** để xem lại dữ liệu lịch sử
 - **Thiết kế responsive** được tối ưu hóa cho máy tính để bàn và thiết bị di động
+- **Giao diện di động tối ưu:** Nút nổi FAB 56px hỗ trợ vùng đệm an toàn `safe-area-inset`, loại bỏ hoàn toàn hiện tượng đè nút trên điện thoại
 - **Tích hợp SignalR** để cập nhật dữ liệu trực tiếp mà không cần làm mới trang
 
 ## Công nghệ sử dụng
