@@ -23,6 +23,7 @@ Một ứng dụng web toàn diện để giám sát và trực quan hóa dữ l
 - **Giao diện di động tối ưu:** Nút nổi FAB 56px hỗ trợ vùng đệm an toàn `safe-area-inset`, loại bỏ hoàn toàn hiện tượng đè nút trên điện thoại
 - **Tính toán tiết kiệm điện & Bộ lọc biểu đồ 4 chế độ:** Công cụ tính toán tiết kiệm điện mặt trời tích hợp biểu giá bậc thang EVN 6 bậc (Quyết định EVN hiện hành + VAT 8%), rà soát dữ liệu thực tế (cổng backup luôn chuẩn 0.0W cho hệ hòa lưới bám tải, chi phí đầu tư chuẩn 48 triệu VNĐ). Hỗ trợ xem biểu đồ linh hoạt theo **Ngày** (24 giờ), **Tháng** (31 ngày), **Năm** (12 tháng), và **Tất cả** (toàn bộ lịch sử các năm), kiểm chứng chuẩn xác trên cả 2 mã thiết bị P352670221 và H250321027.
 - **Phân lập bộ nhớ đệm Calculator (Namespaced Storage):** Quản lý lưu trữ cache độc lập theo từng mã thiết bị (`lumentree_solarSettings_{deviceId}`), tự động thanh trừng cache cũ tránh rò rỉ số liệu giữa các biến tần, ưu tiên nạp dữ liệu thực tế từ API và hỗ trợ trải nghiệm Full-Page View rộng rãi, mượt mà.
+- **Bộ biểu tượng nhận diện (Favicon Suite):** Đầy đủ `favicon.ico`, `favicon-32x32.png`, `apple-touch-icon.png`, `android-chrome-192x192.png` và logo thương hiệu hiển thị sắc nét trên thanh điều hướng đỉnh trang.
 - **Tích hợp SignalR** để cập nhật dữ liệu trực tiếp mà không cần làm mới trang
 
 ## Công nghệ sử dụng
