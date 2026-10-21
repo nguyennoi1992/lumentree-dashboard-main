@@ -21,6 +21,7 @@ Một ứng dụng web toàn diện để giám sát và trực quan hóa dữ l
 - **Điều hướng theo ngày** để xem lại dữ liệu lịch sử
 - **Thiết kế responsive** được tối ưu hóa cho máy tính để bàn và thiết bị di động
 - **Giao diện di động tối ưu:** Nút nổi FAB 56px hỗ trợ vùng đệm an toàn `safe-area-inset`, loại bỏ hoàn toàn hiện tượng đè nút trên điện thoại
+- **Tính toán tiết kiệm điện & Bộ lọc biểu đồ đa chế độ:** Công cụ tính toán tiết kiệm điện mặt trời tích hợp biểu giá bậc thang EVN 6 bậc (Quyết định EVN hiện hành + VAT 8%), rà soát dữ liệu thực tế (cổng backup luôn chuẩn 0.0W cho hệ hòa lưới bám tải, chi phí đầu tư chuẩn 48 triệu VNĐ). Hỗ trợ xem biểu đồ linh hoạt theo **Ngày** (24 giờ), **Tháng** (31 ngày), và **Năm** (12 tháng).
 - **Tích hợp SignalR** để cập nhật dữ liệu trực tiếp mà không cần làm mới trang
 
 ## Công nghệ sử dụng

@@ -283,9 +283,9 @@
             
             // Pass deviceId if available
             const urlParams = new URLSearchParams(window.location.search);
-            const deviceId = urlParams.get('deviceId') || '';
+            const deviceId = urlParams.get('deviceId') || document.getElementById('deviceId')?.value?.trim() || localStorage.getItem('lastDeviceId') || '';
             
-            iframe.src = '/calculator.html' + (deviceId ? '?deviceId=' + deviceId : '');
+            iframe.src = '/calculator.html' + (deviceId ? '?deviceId=' + encodeURIComponent(deviceId) : '');
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
         }
