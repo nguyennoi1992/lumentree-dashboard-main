@@ -578,8 +578,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const dateObj = new Date(date);
             dateDisplay.textContent = dateObj.toLocaleDateString('vi-VN');
         }
-        // Show fixed calculate button
-        if (fixedCalculateBtn) {
+        // Show fixed calculate button on desktop only (avoid overlapping FAB on mobile)
+        if (fixedCalculateBtn && window.innerWidth >= 640) {
             fixedCalculateBtn.classList.remove('hidden');
         }
     }

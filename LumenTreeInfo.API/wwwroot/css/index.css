@@ -707,6 +707,13 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     animation: slideUp 0.3s ease;
 }
 
+/* Ensure #fixedCalculateBtn is NEVER displayed on mobile screens (< 640px) */
+@media (max-width: 639px) {
+    #fixedCalculateBtn {
+        display: none !important;
+    }
+}
+
 @keyframes slideUp {
     from {
         transform: translateY(20px);
@@ -718,10 +725,12 @@ body:has(#mainHeader.header-hidden) #compactSearch {
     }
 }
 
+#fixedCalculateBtn button,
 #fixedCalculateBtn a {
     box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
 }
 
+#fixedCalculateBtn button:hover,
 #fixedCalculateBtn a:hover {
     box-shadow: 0 6px 25px rgba(16, 185, 129, 0.5);
 }

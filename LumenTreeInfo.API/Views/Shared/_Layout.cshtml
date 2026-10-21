@@ -112,28 +112,30 @@
             50% { opacity: 0.7; transform: scale(1.1); }
         }
         
-        /* Floating Action Button */
+        /* Floating Action Button (Mobile Only) */
         .fab {
             position: fixed;
-            bottom: 24px;
-            right: 24px;
-            width: 60px;
-            height: 60px;
+            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            right: 20px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             z-index: 1000;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.5), 0 8px 10px -6px rgba(139, 92, 246, 0.5);
         }
         
         .fab:hover {
-            transform: scale(1.1);
+            transform: scale(1.08);
+            box-shadow: 0 15px 30px -5px rgba(139, 92, 246, 0.6);
         }
         
         .fab:active {
-            transform: scale(0.95);
+            transform: scale(0.92);
         }
         
         /* Modal styles */

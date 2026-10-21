@@ -2,12 +2,12 @@
     ViewData["Title"] = "Giám Sát Năng Lượng Mặt Trời";
 }
 
-<!-- Fixed Calculate Savings Button - Always Visible -->
-<div id="fixedCalculateBtn" class="hidden fixed bottom-4 right-4 z-50">
-    <a href="/calculator" class="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all font-semibold text-sm">
+<!-- Fixed Calculate Savings Button - Desktop Only -->
+<div id="fixedCalculateBtn" class="hidden sm:block fixed bottom-6 right-6 z-50">
+    <button type="button" onclick="openCalculatorModal()" class="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all font-semibold text-sm">
         <i data-lucide="calculator" class="w-5 h-5"></i>
-        <span class="hidden sm:inline">Tính Tiết Kiệm</span>
-    </a>
+        <span>Tính Tiết Kiệm</span>
+    </button>
 </div>
 
 <!-- Hero Section với Input -->
@@ -68,10 +68,10 @@
             <button id="changeDeviceBtn" class="p-1.5 rounded-lg bg-violet-100 dark:bg-violet-900/30 text-violet-600 hover:bg-violet-200" title="Đổi thiết bị">
                 <i data-lucide="edit-3" class="w-4 h-4"></i>
             </button>
-            <a href="/calculator" class="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 text-xs font-semibold transition-colors" title="Tính Tiết Kiệm">
+            <button type="button" onclick="openCalculatorModal()" class="flex items-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 text-xs font-semibold transition-colors" title="Tính Tiết Kiệm">
                 <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
                 <span class="hidden sm:inline">Tính Tiết Kiệm</span>
-            </a>
+            </button>
         </div>
     </div>
 </div>
@@ -539,6 +539,6 @@
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="~/css/index.css?v=14300" rel="stylesheet" />
-    <script src="~/js/index.js?v=14300"></script>
+    <link href="~/css/index.css?v=14400" rel="stylesheet" />
+    <script src="~/js/index.js?v=14400"></script>
 }
