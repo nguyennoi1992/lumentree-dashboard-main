@@ -3559,10 +3559,10 @@
                             if (!localStorage.getItem(targetKey)) {
                                 localStorage.setItem(targetKey, legacy);
                             }
+                            localStorage.removeItem('solarSettings');
                         } catch {
-                            // Bỏ qua nếu dữ liệu không phải JSON hợp lệ
+                            // Bỏ qua nếu dữ liệu không phải JSON hợp lệ hoặc lỗi ghi, không xóa mất dữ liệu cũ
                         }
-                        localStorage.removeItem('solarSettings');
                     }
                 } catch (e) {
                     console.warn('Lỗi dọn cache cũ:', e);
@@ -5320,6 +5320,9 @@
                         } else {
                             loadDemoData();
                         }
+                    })
+                    .finally(() => {
+                        updateStorageStatus();
                     });
             } else {
                 updateDeviceIndicator('');
@@ -5329,9 +5332,8 @@
                 } else {
                     loadDemoData();
                 }
+                updateStorageStatus();
             }
-
-            updateStorageStatus();
         };
     </script>
 
