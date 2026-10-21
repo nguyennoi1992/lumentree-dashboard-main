@@ -4429,13 +4429,15 @@
                 }
             }
 
-            // Fallback: Mô phỏng 31 ngày thực tế (dựa trên bảng tính hoặc mẫu chuẩn gia đình 310 kWh, backup = 0.0)
+            // Fallback: Mô phỏng các ngày trong tháng thực tế (dựa trên bảng tính hoặc mẫu chuẩn gia đình 310 kWh, backup = 0.0)
             const labels = [];
             const solarDaily = [];
             const savingsDaily = [];
-            const daysInMonth = 31;
-            const targetMonthSolar = (currentCalculatedSolar && currentCalculatedSolar.length > 0 && currentCalculatedSolar[0] > 0)
-                ? currentCalculatedSolar[0]
+            const [selYear, selMonth] = selectedMonth.split('-').map(Number);
+            const daysInMonth = (selYear && selMonth) ? new Date(selYear, selMonth, 0).getDate() : 31;
+            const monthIdx = (selYear && selMonth) ? (selMonth - 1) : 0;
+            const targetMonthSolar = (currentCalculatedSolar && currentCalculatedSolar.length > monthIdx && currentCalculatedSolar[monthIdx] > 0)
+                ? currentCalculatedSolar[monthIdx]
                 : 310;
             const baseDaily = targetMonthSolar / daysInMonth;
 
@@ -4519,12 +4521,12 @@
             }
 
             // Fallback: Sử dụng dữ liệu 12 tháng từ bảng tính đã tính toán
-            const labels = getMonthNames();
-            const solarMonthly = (currentCalculatedSolar && currentCalculatedSolar.length > 0)
-                ? currentCalculatedSolar
+            const labels = Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`);
+            const solarMonthly = (currentCalculatedSolar && currentCalculatedSolar.length >= 12)
+                ? currentCalculatedSolar.slice(0, 12)
                 : [285, 285, 295, 310, 320, 340, 330, 320, 310, 290, 285, 285];
-            const savingsMonthly = (currentCalculatedSavings && currentCalculatedSavings.length > 0)
-                ? currentCalculatedSavings
+            const savingsMonthly = (currentCalculatedSavings && currentCalculatedSavings.length >= 12)
+                ? currentCalculatedSavings.slice(0, 12)
                 : solarMonthly.map(s => Math.round(s * 2550));
 
             const yearTotalSolar = solarMonthly.reduce((a, b) => a + b, 0);
