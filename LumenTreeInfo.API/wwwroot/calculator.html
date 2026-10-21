@@ -3551,7 +3551,17 @@
 
             cleanupLegacyCache() {
                 try {
-                    if (localStorage.getItem('solarSettings')) {
+                    const legacy = localStorage.getItem('solarSettings');
+                    if (legacy) {
+                        try {
+                            const parsed = JSON.parse(legacy);
+                            const targetKey = this.getKey(parsed.deviceId || 'default');
+                            if (!localStorage.getItem(targetKey)) {
+                                localStorage.setItem(targetKey, legacy);
+                            }
+                        } catch {
+                            // Bỏ qua nếu dữ liệu không phải JSON hợp lệ
+                        }
                         localStorage.removeItem('solarSettings');
                     }
                 } catch (e) {
