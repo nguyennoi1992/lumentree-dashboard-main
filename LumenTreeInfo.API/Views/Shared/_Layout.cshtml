@@ -323,22 +323,12 @@
             localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
         });
         
-        // Calculator Modal functions
+        // Calculator Navigation (Chuyển trang Dedicated Full View giải phóng không gian hiển thị)
         function openCalculatorModal() {
-            const modal = document.getElementById('calculatorModal');
-            const iframe = document.getElementById('calculatorIframe');
-            
-            // Pass deviceId if available
             const urlParams = new URLSearchParams(window.location.search);
             const deviceId = urlParams.get('deviceId') || document.getElementById('deviceId')?.value?.trim() || localStorage.getItem('lastDeviceId') || '';
-            
             const targetUrl = '/calculator.html' + (deviceId ? '?deviceId=' + encodeURIComponent(deviceId) : '');
-            if (iframe.getAttribute('src') !== targetUrl) {
-                iframe.src = targetUrl;
-            }
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+            window.location.href = targetUrl;
         }
 
         function openCalculatorTab() {

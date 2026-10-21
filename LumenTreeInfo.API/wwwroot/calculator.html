@@ -33,19 +33,150 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 0 0 30px 0;
             color: #fff;
         }
 
-        .container {
-            max-width: 1400px;
+        /* Top Navigation Bar */
+        .calc-top-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+        }
+
+        .calc-nav-container {
+            max-width: 1650px;
             margin: 0 auto;
-            background: rgba(30, 40, 60, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .btn-back-dashboard {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(37, 99, 235, 0.35) 100%);
+            border: 1px solid rgba(96, 165, 250, 0.4);
+            color: #bfdbfe;
+            padding: 8px 18px;
+            border-radius: 9999px;
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+        }
+
+        .btn-back-dashboard:hover {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.45) 0%, rgba(37, 99, 235, 0.55) 100%);
+            color: #ffffff;
+            transform: translateX(-3px);
+            box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+        }
+
+        .calc-nav-center {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .calc-nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #f8fafc;
+            letter-spacing: -0.01em;
+        }
+
+        .calc-logo-icon {
+            font-size: 1.25em;
+        }
+
+        .nav-device-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #6ee7b7;
+        }
+
+        .live-pulse {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .container {
+            max-width: 1650px;
+            width: 96%;
+            margin: 0 auto;
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            padding: 28px 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Khi nhúng trong iframe (nếu có) */
+        body.in-iframe {
+            padding: 10px;
+            background: #0f172a;
+        }
+        body.in-iframe .calc-top-navbar {
+            display: none;
+        }
+        body.in-iframe .container {
+            width: 100%;
+            max-width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            background: transparent;
+            box-shadow: none;
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .calc-top-navbar {
+                padding: 10px 14px;
+                margin-bottom: 16px;
+            }
+            .calc-nav-brand {
+                display: none;
+            }
+            .container {
+                width: 98%;
+                padding: 16px 12px;
+                border-radius: 14px;
+            }
         }
 
         .header {
@@ -2487,6 +2618,31 @@
     </style>
 </head>
 <body>
+    <!-- Top Navigation Bar (Dành cho trang Dedicated Full View) -->
+    <header class="calc-top-navbar">
+        <div class="calc-nav-container">
+            <a href="/" id="btnBackToDashboard" class="btn-back-dashboard">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                <span>Quay lại Dashboard Giám Sát</span>
+            </a>
+            <div class="calc-nav-center">
+                <div class="calc-nav-brand">
+                    <span class="calc-logo-icon">⚡</span>
+                    <span class="calc-brand-title">LightEarth Solar Analytics</span>
+                </div>
+            </div>
+            <div class="calc-nav-right">
+                <div id="navDeviceBadge" class="nav-device-badge">
+                    <span class="live-pulse"></span>
+                    <span id="navDeviceIdText">Thiết bị: Đang tải...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
     <div class="container">
         <div class="header">
             <h1>🌞 Tính Toán Tiết Kiệm Điện Năng Lượng Mặt Trời</h1>
@@ -4279,6 +4435,17 @@
             const badge = document.getElementById('chartSourceBadge');
             const badgeDot = document.getElementById('badgeDot');
             const badgeText = document.getElementById('badgeSourceText');
+            const navText = document.getElementById('navDeviceIdText');
+            const backBtn = document.getElementById('btnBackToDashboard');
+
+            if (backBtn) {
+                backBtn.href = deviceId ? `/?deviceId=${encodeURIComponent(deviceId)}` : '/';
+            }
+
+            if (navText) {
+                navText.innerHTML = deviceId ? `Thiết bị: <strong style="color: #6ee7b7;">${escapeHtml(deviceId)}</strong> (Trực tiếp)` : 'Chế độ: Mô phỏng';
+            }
+
             if (!badge || !badgeText) return;
 
             if (deviceId) {
@@ -5346,8 +5513,11 @@
             resultSection.classList.add('show');
         }
 
-        // Enter key to calculate in modal
+        // Enter key to calculate in modal & check iframe context
         document.addEventListener('DOMContentLoaded', function() {
+            if (window.self !== window.top) {
+                document.body.classList.add('in-iframe');
+            }
             const evnInput = document.getElementById('evnKwh');
             if (evnInput) {
                 evnInput.addEventListener('keypress', function(e) {
