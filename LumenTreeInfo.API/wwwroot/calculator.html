@@ -3514,6 +3514,52 @@
             return monthDataCache[id] || defaultValue;
         }
 
+        // Quản lý bộ nhớ đệm phân lập theo từng thiết bị (Namespaced Storage Cache)
+        const CacheManager = {
+            PREFIX: 'lumentree_solarSettings_',
+
+            getKey(deviceId) {
+                const cleanId = (deviceId || '').trim().toUpperCase();
+                return this.PREFIX + (cleanId || 'default');
+            },
+
+            save(deviceId, data) {
+                const key = this.getKey(deviceId);
+                data.deviceId = (deviceId || '').trim().toUpperCase();
+                data.savedAt = new Date().toISOString();
+                data.timestamp = Date.now();
+                try {
+                    localStorage.setItem(key, JSON.stringify(data));
+                    if (deviceId) {
+                        localStorage.setItem('lastDeviceId', deviceId.trim().toUpperCase());
+                    }
+                } catch (e) {
+                    console.warn('Lỗi lưu cache thiết bị:', e);
+                }
+            },
+
+            get(deviceId) {
+                const key = this.getKey(deviceId);
+                const data = localStorage.getItem(key);
+                if (!data) return null;
+                try {
+                    return JSON.parse(data);
+                } catch {
+                    return null;
+                }
+            },
+
+            cleanupLegacyCache() {
+                try {
+                    if (localStorage.getItem('solarSettings')) {
+                        localStorage.removeItem('solarSettings');
+                    }
+                } catch (e) {
+                    console.warn('Lỗi dọn cache cũ:', e);
+                }
+            }
+        };
+
         // Lưu cài đặt vào localStorage - Real-time
         function saveSettings(isAutoSave = false) {
             // Cập nhật cache với giá trị hiện tại
@@ -3527,7 +3573,9 @@
                 if (backupEl) monthDataCache[`backup${i}`] = backupEl.value;
             }
 
+            const currentDevId = getActiveDeviceId();
             const settings = {
+                deviceId: currentDevId,
                 solarPrice: document.getElementById('solarPrice').value,
                 vatRate: document.getElementById('vatRate').value,
                 initialCost: getInitialCostValue().toString(),
@@ -3537,7 +3585,7 @@
                 currentPage: currentPage,
                 monthlyData: [],
                 savedAt: new Date().toISOString(),
-                version: '3.3'
+                version: '3.4'
             };
 
             for (let i = 0; i < totalMonths; i++) {
@@ -3549,7 +3597,7 @@
             }
 
             try {
-                localStorage.setItem('solarSettings', JSON.stringify(settings));
+                CacheManager.save(currentDevId, settings);
                 updateStorageStatus();
 
                 // Hiển thị indicator khi lưu
@@ -3733,18 +3781,17 @@
         }
         // ==================== END EXPORT TO CSV ====================
 
-        // Tải cài đặt từ localStorage
-        function loadSettings() {
-            const savedSettings = localStorage.getItem('solarSettings');
+        // Tải cài đặt từ localStorage (phân lập theo thiết bị)
+        function loadSettings(targetDeviceId = null, settingsObj = null) {
+            const currentDevId = targetDeviceId || getActiveDeviceId();
+            const settings = settingsObj || CacheManager.get(currentDevId);
 
-            if (!savedSettings) {
-                showNotification('⚠️ Không tìm thấy dữ liệu đã lưu!', 'info');
-                return;
+            if (!settings) {
+                showNotification(`⚠️ Không tìm thấy dữ liệu đã lưu cho thiết bị ${currentDevId || 'này'}!`, 'info');
+                return false;
             }
 
             try {
-                const settings = JSON.parse(savedSettings);
-
                 // Cập nhật số tháng, năm và tháng bắt đầu nếu có
                 if (settings.totalMonths) {
                     totalMonths = settings.totalMonths;
@@ -3764,37 +3811,43 @@
                 // Clear cache và load lại
                 monthDataCache = {};
 
-                // Load data vào cache trước
-                settings.monthlyData.forEach((data, index) => {
-                    monthDataCache[`load${index}`] = data.load;
-                    monthDataCache[`grid${index}`] = data.grid;
-                    monthDataCache[`backup${index}`] = data.backup;
-                });
+                if (Array.isArray(settings.monthlyData)) {
+                    settings.monthlyData.forEach((data, index) => {
+                        monthDataCache[`load${index}`] = data.load;
+                        monthDataCache[`grid${index}`] = data.grid;
+                        monthDataCache[`backup${index}`] = data.backup;
+                    });
+                }
 
                 // Khởi tạo lại inputs với số tháng mới
                 initializeInputs();
 
                 document.getElementById('solarPrice').value = settings.solarPrice || 0;
-                document.getElementById('vatRate').value = settings.vatRate;
+                document.getElementById('vatRate').value = settings.vatRate !== undefined ? settings.vatRate : 8;
                 setInitialCostValue(parseFloat(settings.initialCost) || 0);
 
                 // Load data vào các input hiển thị
-                settings.monthlyData.forEach((data, index) => {
-                    if (index < totalMonths) {
-                        const loadEl = document.getElementById(`load${index}`);
-                        const gridEl = document.getElementById(`grid${index}`);
-                        const backupEl = document.getElementById(`backup${index}`);
+                if (Array.isArray(settings.monthlyData)) {
+                    settings.monthlyData.forEach((data, index) => {
+                        if (index < totalMonths) {
+                            const loadEl = document.getElementById(`load${index}`);
+                            const gridEl = document.getElementById(`grid${index}`);
+                            const backupEl = document.getElementById(`backup${index}`);
 
-                        if (loadEl) loadEl.value = data.load;
-                        if (gridEl) gridEl.value = data.grid;
-                        if (backupEl) backupEl.value = data.backup;
-                    }
-                });
+                            if (loadEl) loadEl.value = data.load;
+                            if (gridEl) gridEl.value = data.grid;
+                            if (backupEl) backupEl.value = data.backup;
+                        }
+                    });
+                }
 
-                showNotification('📂 Đã tải cài đặt thành công!', 'success');
+                updateStorageStatus();
+                showNotification(`📂 Đã nạp dữ liệu lưu cho thiết bị ${currentDevId || 'mặc định'}!`, 'success');
                 calculateSavings();
+                return true;
             } catch (e) {
                 showNotification('❌ Lỗi khi tải cài đặt: ' + e.message, 'error');
+                return false;
             }
         }
 
@@ -3868,22 +3921,23 @@
             event.target.value = '';
         }
 
-        // Cập nhật trạng thái lưu trữ
+        // Cập nhật trạng thái lưu trữ theo từng thiết bị
         function updateStorageStatus() {
-            const savedSettings = localStorage.getItem('solarSettings');
+            const currentDevId = getActiveDeviceId();
+            const settings = CacheManager.get(currentDevId);
             const statusEl = document.getElementById('storageStatus');
+            if (!statusEl) return;
 
-            if (savedSettings) {
+            if (settings && settings.savedAt) {
                 try {
-                    const settings = JSON.parse(savedSettings);
                     const savedDate = new Date(settings.savedAt);
                     const formattedDate = savedDate.toLocaleString('vi-VN');
-                    statusEl.textContent = `Đã lưu lần cuối: ${formattedDate}`;
+                    statusEl.textContent = `Thiết bị [${currentDevId || 'Mặc định'}]: Đã lưu lần cuối: ${formattedDate}`;
                 } catch (e) {
-                    statusEl.textContent = 'Có dữ liệu đã lưu';
+                    statusEl.textContent = `Thiết bị [${currentDevId || 'Mặc định'}]: Đã lưu dữ liệu`;
                 }
             } else {
-                statusEl.textContent = 'Chưa có dữ liệu lưu trữ';
+                statusEl.textContent = `Thiết bị [${currentDevId || 'Mặc định'}]: Chưa có bản lưu tùy chỉnh (Đồng bộ trực tiếp)`;
             }
         }
 
@@ -5192,8 +5246,10 @@
 
         // Khởi tạo khi trang load
         window.onload = function() {
+            // 1. Dọn dẹp cache cũ không phân lập thiết bị (tránh data leak từ phiên trước)
+            CacheManager.cleanupLegacyCache();
+
             initializeInputs();
-            updateStorageStatus();
             setupInitialCostInput(); // Setup auto-format cho initialCost
 
             // Khởi tạo ngày/tháng/năm cho bộ lọc biểu đồ
@@ -5214,22 +5270,18 @@
             if (yearSelect) yearSelect.value = String(yyyy);
 
             // Kiểm tra thiết bị từ URL hoặc localStorage
-            const deviceId = getActiveDeviceId();
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlDeviceId = (urlParams.get('deviceId') || '').trim().toUpperCase();
+            const deviceId = urlDeviceId || getActiveDeviceId();
+
             if (deviceId) {
                 if (document.getElementById('dashboardDeviceId')) document.getElementById('dashboardDeviceId').value = deviceId;
                 if (document.getElementById('lumentreeDeviceId')) document.getElementById('lumentreeDeviceId').value = deviceId;
                 if (document.getElementById('manualDeviceId')) document.getElementById('manualDeviceId').value = deviceId;
                 updateDeviceIndicator(deviceId);
-            } else {
-                updateDeviceIndicator('');
-            }
 
-            // Tự động tải cài đặt nếu có
-            const savedSettings = localStorage.getItem('solarSettings');
-            if (savedSettings) {
-                loadSettings();
-            } else if (deviceId) {
-                // Nếu có thiết bị, tự động nạp dữ liệu thực tế từ Lumentree API
+                // Ưu tiên nạp dữ liệu chuẩn của riêng deviceId:
+                // Nếu URL chỉ định deviceId, fetch trực tiếp API biến tần để đảm bảo số liệu thực tế chính xác nhất
                 fetch(`/device/${encodeURIComponent(deviceId)}/monthly`)
                     .then(res => res.ok ? res.json() : null)
                     .then(data => {
@@ -5239,19 +5291,37 @@
                         const monthsWithData = rawMonths.filter(m => (m.load || 0) > 0 || (m.grid || 0) > 0 || (m.pv || 0) > 0);
                         if (monthsWithData.length > 0) {
                             lumentreeData = rawMonths;
-                            importLumentreeData();
-                            showNotification(`🟢 Tự động đồng bộ ${monthsWithData.length} tháng thực tế từ thiết bị ${deviceId}!`, 'success');
+                            importLumentreeData(deviceId);
+                            showNotification(`🟢 Đã nạp thành công ${monthsWithData.length} tháng thực tế của thiết bị ${deviceId}!`, 'success');
                         } else {
-                            loadDemoData();
+                            // Nếu thiết bị chưa có dữ liệu tháng, thử nạp từ cache riêng của thiết bị đó
+                            const cachedDev = CacheManager.get(deviceId);
+                            if (cachedDev) {
+                                loadSettings(deviceId, cachedDev);
+                            } else {
+                                loadDemoData();
+                            }
                         }
                     })
                     .catch(() => {
-                        loadDemoData();
+                        const cachedDev = CacheManager.get(deviceId);
+                        if (cachedDev) {
+                            loadSettings(deviceId, cachedDev);
+                        } else {
+                            loadDemoData();
+                        }
                     });
             } else {
-                // Nếu không có dữ liệu lưu hoặc thiết bị, tải demo
-                loadDemoData();
+                updateDeviceIndicator('');
+                const defaultCached = CacheManager.get('default');
+                if (defaultCached) {
+                    loadSettings('default', defaultCached);
+                } else {
+                    loadDemoData();
+                }
             }
+
+            updateStorageStatus();
         };
     </script>
 
@@ -5822,11 +5892,13 @@
             }
         }
 
-        function importLumentreeData() {
+        function importLumentreeData(targetDeviceId = null) {
             if (!lumentreeData || lumentreeData.length === 0) {
                 showNotification('⚠️ Không có dữ liệu để nhập!', 'error');
                 return;
             }
+
+            const currentDevId = targetDeviceId || getActiveDeviceId();
 
             // Filter months with data
             const monthsWithData = lumentreeData.filter(m => m.load > 0 || m.grid > 0 || m.pv > 0);
@@ -5856,7 +5928,7 @@
             monthsWithData.forEach((m, index) => {
                 monthDataCache[`load${index}`] = m.load.toFixed(1);
                 monthDataCache[`grid${index}`] = m.grid.toFixed(1);
-                monthDataCache[`backup${index}`] = m.backup.toFixed(1);
+                monthDataCache[`backup${index}`] = (m.backup || 0).toFixed(1);
             });
 
             // Reinitialize inputs with new month count
@@ -5884,7 +5956,7 @@
             // Show success with details
             const lastMonth = monthsWithData[monthsWithData.length - 1].month;
             const [lastYear, lastMonthNum] = lastMonth.split('-').map(Number);
-            showNotification(`✅ Đã nhập ${monthsWithData.length} tháng (${firstMonthNum}/${firstYear} - ${lastMonthNum}/${lastYear}) từ Lumentree!`, 'success');
+            showNotification(`✅ Đã nạp ${monthsWithData.length} tháng (${firstMonthNum}/${firstYear} - ${lastMonthNum}/${lastYear}) từ thiết bị ${currentDevId}!`, 'success');
         }
 
         // Close modal on click outside
