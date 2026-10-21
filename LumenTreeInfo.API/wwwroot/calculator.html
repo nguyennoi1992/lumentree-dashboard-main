@@ -1184,81 +1184,103 @@
             height: 500px;
         }
 
-        /* Khối điều khiển bộ lọc xem biểu đồ (Ngày / Tháng / Năm) */
+        /* Khối điều khiển bộ lọc xem biểu đồ (Ngày / Tháng / Năm / Tất cả) */
         .chart-controls-card {
-            background: rgba(45, 55, 72, 0.65);
-            padding: 20px 25px;
-            border-radius: 15px;
+            background: rgba(30, 41, 59, 0.95);
+            padding: 18px 22px;
+            border-radius: 16px;
             margin-bottom: 20px;
-            border: 1px solid rgba(74, 222, 128, 0.2);
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(74, 222, 128, 0.25);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            position: sticky;
+            top: 10px;
+            z-index: 30;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
 
-        .chart-controls-header {
+        .chart-controls-top-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 15px;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+
+        .chart-title-box {
+            flex: 1 1 0%;
+            min-width: 0;
         }
 
         .chart-main-title {
             color: #4ade80;
-            font-size: 1.35em;
+            font-size: 1.25em;
             font-weight: 700;
             margin: 0;
             display: flex;
             align-items: center;
             gap: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chart-subtitle-row {
+            width: 100%;
+            min-height: 22px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .chart-main-subtitle {
             color: #cbd5e0;
-            font-size: 0.9em;
-            margin-top: 5px;
+            font-size: 0.88em;
+            margin: 0;
             line-height: 1.4;
+            font-variant-numeric: tabular-nums;
         }
 
         .chart-mode-pill-container {
-            display: flex;
-            gap: 6px;
-            background: rgba(26, 32, 44, 0.75);
+            flex-shrink: 0;
+            display: inline-flex;
+            gap: 4px;
+            background: #0f172a;
             padding: 4px;
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            white-space: nowrap;
         }
 
         .chart-mode-pill {
-            padding: 8px 16px;
+            padding: 7px 14px;
             border: none;
             border-radius: 8px;
             background: transparent;
-            color: #cbd5e0;
-            font-size: 0.9em;
+            color: #94a3b8;
+            font-size: 0.85em;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.25s ease;
+            white-space: nowrap;
+            transition: all 0.2s ease;
         }
 
         .chart-mode-pill:hover {
             color: #fff;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .chart-mode-pill.active {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: #fff;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
         }
 
         .chart-filter-toolbar {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             flex-wrap: wrap;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .chart-filter-item {
@@ -2247,24 +2269,34 @@
             }
 
             .chart-controls-card {
-                padding: 15px;
+                position: static;
+                padding: 12px 14px;
             }
 
-            .chart-controls-header {
+            .chart-controls-top-row {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 10px;
             }
 
             .chart-mode-pill-container {
                 width: 100%;
-                justify-content: space-between;
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                padding: 3px;
+                gap: 2px;
             }
 
             .chart-mode-pill {
-                flex: 1;
-                padding: 8px 6px;
+                flex: none;
+                padding: 7px 2px;
                 text-align: center;
-                font-size: 0.8em;
+                font-size: 0.78em;
+            }
+
+            .chart-subtitle-row {
+                margin-bottom: 10px;
+                padding-bottom: 6px;
             }
 
             .chart-filter-toolbar {
@@ -2720,26 +2752,35 @@
             </div>
         </div>
 
-        <!-- Khối điều khiển chế độ xem biểu đồ (Ngày / Tháng / Năm) -->
+        <!-- Khối điều khiển chế độ xem biểu đồ (Ngày / Tháng / Năm / Tất cả) -->
         <div class="chart-controls-card">
-            <div class="chart-controls-header">
-                <div>
+            <!-- Hàng 1: Tiêu đề bên trái, Cụm nút chuyển chế độ bên phải (CỐ ĐỊNH, KHÔNG BAO GIỜ NHẢY DÒNG) -->
+            <div class="chart-controls-top-row">
+                <div class="chart-title-box">
                     <h2 class="chart-main-title">📊 Biểu Đồ Phân Tích & Tiết Kiệm</h2>
-                    <p class="chart-main-subtitle" id="chartViewSubtitle">Đang xem: Theo Tháng (31 Ngày)</p>
                 </div>
-                <div class="chart-mode-pill-container">
+                <div class="chart-mode-pill-container" role="tablist">
                     <button type="button" class="chart-mode-pill" id="btnModeDay" onclick="setChartViewMode('day')">
-                        📅 Theo Ngày
+                        📅 Ngày
                     </button>
                     <button type="button" class="chart-mode-pill active" id="btnModeMonth" onclick="setChartViewMode('month')">
-                        🗓️ Theo Tháng
+                        🗓️ Tháng
                     </button>
                     <button type="button" class="chart-mode-pill" id="btnModeYear" onclick="setChartViewMode('year')">
-                        📈 Theo Năm
+                        📈 Năm
+                    </button>
+                    <button type="button" class="chart-mode-pill" id="btnModeAll" onclick="setChartViewMode('all')">
+                        🌐 Tất Cả
                     </button>
                 </div>
             </div>
 
+            <!-- Hàng 2: Phụ đề thông số (Độc lập, cố định chiều cao, không xô lệch vị trí nút) -->
+            <div class="chart-subtitle-row">
+                <p class="chart-main-subtitle" id="chartViewSubtitle">Đang xem: Theo Tháng (31 Ngày)</p>
+            </div>
+
+            <!-- Hàng 3: Thanh công cụ bộ lọc thời gian + Trạng thái thiết bị + Nút tải lại -->
             <div class="chart-filter-toolbar">
                 <!-- Bộ lọc theo Ngày -->
                 <div id="filterGroupDay" class="chart-filter-item" style="display: none;">
@@ -2762,6 +2803,11 @@
                         <option value="2026" selected>Năm 2026</option>
                         <option value="2027">Năm 2027</option>
                     </select>
+                </div>
+
+                <!-- Bộ lọc Tất Cả -->
+                <div id="filterGroupAll" class="chart-filter-item" style="display: none;">
+                    <span style="color: #6ee7b7; font-size: 0.88em; font-weight: 600;">🌐 Toàn bộ lịch sử thiết bị</span>
                 </div>
 
                 <!-- Thiết bị & Nguồn dữ liệu -->
@@ -4260,16 +4306,20 @@
             const btnDay = document.getElementById('btnModeDay');
             const btnMonth = document.getElementById('btnModeMonth');
             const btnYear = document.getElementById('btnModeYear');
+            const btnAll = document.getElementById('btnModeAll');
             if (btnDay) btnDay.classList.toggle('active', mode === 'day');
             if (btnMonth) btnMonth.classList.toggle('active', mode === 'month');
             if (btnYear) btnYear.classList.toggle('active', mode === 'year');
+            if (btnAll) btnAll.classList.toggle('active', mode === 'all');
 
             const groupDay = document.getElementById('filterGroupDay');
             const groupMonth = document.getElementById('filterGroupMonth');
             const groupYear = document.getElementById('filterGroupYear');
+            const groupAll = document.getElementById('filterGroupAll');
             if (groupDay) groupDay.style.display = mode === 'day' ? 'flex' : 'none';
             if (groupMonth) groupMonth.style.display = mode === 'month' ? 'flex' : 'none';
             if (groupYear) groupYear.style.display = mode === 'year' ? 'flex' : 'none';
+            if (groupAll) groupAll.style.display = mode === 'all' ? 'flex' : 'none';
 
             updateChartView();
         }
@@ -4297,6 +4347,8 @@
                 loadAndRenderDayChart();
             } else if (currentChartViewMode === 'year') {
                 loadAndRenderYearChart();
+            } else if (currentChartViewMode === 'all') {
+                loadAndRenderAllChart();
             } else {
                 loadAndRenderMonthChart();
             }
@@ -4318,7 +4370,8 @@
                     if (subtitle) subtitle.textContent = `Đang tải dữ liệu ngày ${selectedDate} từ thiết bị ${deviceId}...`;
                     const res = await fetch(`/device/${encodeURIComponent(deviceId)}?date=${encodeURIComponent(selectedDate)}`);
                     if (res.ok) {
-                        const data = await res.json();
+                        const rawData = await res.json();
+                        const data = (rawData && rawData.data) ? rawData.data : rawData;
                         if (data && data.pv && Array.isArray(data.pv.tableValueInfo) && data.pv.tableValueInfo.length > 0) {
                             const pvArray = data.pv.tableValueInfo;
                             const labels = [];
@@ -4476,7 +4529,7 @@
                         if (yData && yData.pv && Array.isArray(yData.pv.tableValueInfo)) {
                             const pvArray = yData.pv.tableValueInfo;
                             const gridArray = (yData.grid && yData.grid.tableValueInfo) || [];
-                            const loadArray = (yData.essentialLoad && yData.essentialLoad.tableValueInfo) || [];
+                            const loadArray = (yData.homeload && yData.homeload.tableValueInfo) || (yData.essentialLoad && yData.essentialLoad.tableValueInfo) || [];
 
                             const labels = [];
                             const solarMonthly = [];
@@ -4522,12 +4575,16 @@
 
             // Fallback: Sử dụng dữ liệu 12 tháng từ bảng tính đã tính toán
             const labels = Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`);
-            const solarMonthly = (currentCalculatedSolar && currentCalculatedSolar.length >= 12)
-                ? currentCalculatedSolar.slice(0, 12)
-                : [285, 285, 295, 310, 320, 340, 330, 320, 310, 290, 285, 285];
-            const savingsMonthly = (currentCalculatedSavings && currentCalculatedSavings.length >= 12)
-                ? currentCalculatedSavings.slice(0, 12)
-                : solarMonthly.map(s => Math.round(s * 2550));
+            const defaultSolar = [285, 285, 295, 310, 320, 340, 330, 320, 310, 290, 285, 285];
+            const hasCalculated = currentCalculatedSolar && currentCalculatedSolar.length > 0;
+            const solarMonthly = Array.from({ length: 12 }, (_, i) =>
+                hasCalculated ? (currentCalculatedSolar[i] ?? 0) : defaultSolar[i]
+            );
+            const savingsMonthly = Array.from({ length: 12 }, (_, i) =>
+                hasCalculated && currentCalculatedSavings && currentCalculatedSavings[i] !== undefined
+                    ? currentCalculatedSavings[i]
+                    : Math.round(solarMonthly[i] * 2550)
+            );
 
             const yearTotalSolar = solarMonthly.reduce((a, b) => a + b, 0);
             const yearTotalSavings = savingsMonthly.reduce((a, b) => a + b, 0);
@@ -4538,6 +4595,85 @@
 
             drawSolarChart(solarMonthly, labels, `Điện Solar Sản Xuất Từng Tháng (kWh) - Năm ${selectedYear}`);
             drawChart(savingsMonthly, labels, `Tiền Tiết Kiệm Từng Tháng (VNĐ) - Năm ${selectedYear}`);
+        }
+
+        // 4. Chế độ xem Toàn Bộ Lịch Sử (Tất cả các năm)
+        async function loadAndRenderAllChart() {
+            const subtitle = document.getElementById('chartViewSubtitle');
+            const deviceId = getActiveDeviceId();
+
+            if (deviceId) {
+                try {
+                    if (subtitle) subtitle.textContent = `Đang tải toàn bộ lịch sử từ thiết bị ${deviceId}...`;
+                    const res = await fetch(`/device/${encodeURIComponent(deviceId)}/history-data`);
+                    if (res.ok) {
+                        const json = await res.json();
+                        const hData = json.data || json;
+                        if (hData && hData.pv && Array.isArray(hData.pv.tableValueInfo)) {
+                            const pvArray = hData.pv.tableValueInfo;
+                            const gridArray = (hData.grid && hData.grid.tableValueInfo) || [];
+                            const loadArray = (hData.homeload && hData.homeload.tableValueInfo) || (hData.essentialLoad && hData.essentialLoad.tableValueInfo) || [];
+
+                            const startYear = parseInt(hData.firstYear) || (new Date().getFullYear() - pvArray.length + 1);
+                            const labels = [];
+                            const solarYears = [];
+                            const savingsYears = [];
+                            let grandTotalSolar = 0;
+                            let grandTotalSavings = 0;
+
+                            for (let i = 0; i < pvArray.length; i++) {
+                                const yr = startYear + i;
+                                labels.push(`Năm ${yr}`);
+                                const solarKwh = parseFloat(((pvArray[i] || 0) / 10).toFixed(1));
+                                const gridKwh = parseFloat(((gridArray[i] || 0) / 10).toFixed(1));
+                                const loadKwh = parseFloat(((loadArray[i] || 0) / 10).toFixed(1));
+
+                                solarYears.push(solarKwh);
+                                grandTotalSolar += solarKwh;
+
+                                let savingsVND = 0;
+                                if (loadKwh > 0 || gridKwh > 0) {
+                                    const totalCons = loadKwh > 0 ? loadKwh : (solarKwh + gridKwh);
+                                    const costWithout = calculateTieredPrice(totalCons, 0.08);
+                                    const actualCost = calculateTieredPrice(gridKwh, 0.08);
+                                    savingsVND = Math.max(0, Math.round(costWithout - actualCost));
+                                } else if (solarKwh > 0) {
+                                    savingsVND = Math.round(solarKwh * 2550);
+                                }
+                                savingsYears.push(savingsVND);
+                                grandTotalSavings += savingsVND;
+                            }
+
+                            if (subtitle) {
+                                subtitle.innerHTML = `🌐 Toàn bộ lịch sử (${escapeHtml(deviceId)}): Tổng Solar <strong>${formatKWh(grandTotalSolar)}</strong> — Tiết kiệm tích lũy <strong>${formatVND(grandTotalSavings)}</strong>`;
+                            }
+
+                            drawSolarChart(solarYears, labels, `Điện Solar Sản Xuất Theo Năm (kWh) - Toàn Bộ Lịch Sử`);
+                            drawChart(savingsYears, labels, `Tiền Tiết Kiệm Tích Lũy Theo Năm (VNĐ) - Toàn Bộ Lịch Sử`);
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Lỗi tải dữ liệu lịch sử:', err);
+                }
+            }
+
+            // Fallback: Toàn bộ lịch sử từ bảng tính
+            const currentYear = new Date().getFullYear();
+            const labels = [`Năm ${currentYear}`];
+            const sumSolar = (currentCalculatedSolar && currentCalculatedSolar.length > 0)
+                ? currentCalculatedSolar.reduce((a, b) => a + b, 0)
+                : 3650;
+            const sumSavings = (currentCalculatedSavings && currentCalculatedSavings.length > 0)
+                ? currentCalculatedSavings.reduce((a, b) => a + b, 0)
+                : Math.round(sumSolar * 2550);
+
+            if (subtitle) {
+                subtitle.innerHTML = `🌐 Toàn bộ lịch sử (Bảng tính): Tổng Solar <strong>${formatKWh(sumSolar)}</strong> — Tiết kiệm tích lũy <strong>${formatVND(sumSavings)}</strong>`;
+            }
+
+            drawSolarChart([sumSolar], labels, `Điện Solar Sản Xuất Theo Năm (kWh) - Toàn Bộ Lịch Sử`);
+            drawChart([sumSavings], labels, `Tiền Tiết Kiệm Tích Lũy Theo Năm (VNĐ) - Toàn Bộ Lịch Sử`);
         }
 
         // Vẽ biểu đồ tiết kiệm
