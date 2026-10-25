@@ -790,22 +790,34 @@ document.addEventListener('DOMContentLoaded', function () {
             const p2 = Number(data.pv2Power) || 0;
             const v2 = Number(data.pv2Voltage) || 0;
             updateValue('pv-power', `${pvPower}W`);
-            updateValueHTML('pv-desc', `
-                <span class="hidden sm:inline text-amber-500">S1:</span>
-                <span class="text-amber-400 font-bold text-[11px] sm:text-sm">${p1}W</span>
-                <span class="text-[9px] sm:text-xs text-gray-400">${v1}V</span>
-                <span class="text-gray-500 mx-0.5">|</span>
-                <span class="hidden sm:inline text-amber-500">S2:</span>
-                <span class="text-amber-400 font-bold text-[11px] sm:text-sm">${p2}W</span>
-                <span class="text-[9px] sm:text-xs text-gray-400">${v2}V</span>
-            `);
+            if (p1 > 0 && p2 > 0) {
+                updateValueHTML('pv-desc', `
+                    <span class="hidden sm:inline text-amber-500">S1:</span>
+                    <span class="text-amber-400 font-bold text-[11px] sm:text-sm">${p1}W</span>
+                    <span class="text-[9px] sm:text-xs text-gray-400">${v1}V</span>
+                    <span class="text-gray-500 mx-0.5">|</span>
+                    <span class="hidden sm:inline text-amber-500">S2:</span>
+                    <span class="text-amber-400 font-bold text-[11px] sm:text-sm">${p2}W</span>
+                    <span class="text-[9px] sm:text-xs text-gray-400">${v2}V</span>
+                `);
+            } else {
+                let activeV = 0;
+                if (p1 > 0) {
+                    activeV = v1;
+                } else if (p2 > 0) {
+                    activeV = v2;
+                } else {
+                    activeV = v1 > 0 ? v1 : v2;
+                }
+                updateValue('pv-desc', activeV > 0 ? `${activeV}V` : '--V');
+            }
         } else {
             updateValue('pv-power', `${pvPower}W`);
             const pvDesc = data.pv1Voltage > 0 ? `${data.pv1Voltage}V` : '--V';
             updateValue('pv-desc', pvDesc);
         }
 
-        // Cập nhật 2 đầu vào quang điện (MPPT 1 & MPPT 2) chuẩn App Android Lumentree (--V, --W, --A khi không có nắng)
+        // Cập nhật 2 đầu vào quang điện (MPPT 1 & MPPT 2) chuẩn App Android Lumentree (--V, --W, --A khi không có nắng hoặc không cắm chuỗi)
         const pv1V = data.pv1Voltage || 0;
         const pv1P = data.pv1Power || 0;
         let pv1I = '0.0';
@@ -825,20 +837,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const totalPvLive = pvPower || (pv1P + pv2P);
-        const formatMpptPower = (power, totalLive) => {
+        const formatMpptPower = (power, voltage) => {
             if (power > 0) return `${power} W`;
-            if (totalLive === 0) return '--W';
-            return '0 W';
+            if (voltage > 0) return '0 W';
+            return '--W';
         };
         const formatMpptCurrent = (currentStr) => (parseFloat(currentStr) > 0 ? `${currentStr} A` : '--A');
 
         updateValue('pv-total-live', totalPvLive > 0 ? `${totalPvLive} W` : `--W`);
         updateValue('pv1-voltage', pv1V > 0 ? `${pv1V} V` : `--V`);
-        updateValue('pv1-power', formatMpptPower(pv1P, totalPvLive));
+        updateValue('pv1-power', formatMpptPower(pv1P, pv1V));
         updateValue('pv1-current', formatMpptCurrent(pv1I));
 
         updateValue('pv2-voltage', pv2V > 0 ? `${pv2V} V` : `--V`);
-        updateValue('pv2-power', formatMpptPower(pv2P, totalPvLive));
+        updateValue('pv2-power', formatMpptPower(pv2P, pv2V));
         updateValue('pv2-current', formatMpptCurrent(pv2I));
 
         // Grid - with blink effect
