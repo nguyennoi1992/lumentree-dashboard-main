@@ -1481,6 +1481,65 @@
             color: #fff;
         }
 
+        .btn-date-nav {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #cbd5e0;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-date-nav:hover {
+            background: rgba(16, 185, 129, 0.25);
+            border-color: #10b981;
+            color: #fff;
+        }
+
+        .chart-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .chart-stat-chip {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 12px;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .chart-stat-chip:hover {
+            transform: translateY(-2px);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+
+        .chart-stat-chip-label {
+            font-size: 0.75em;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .chart-stat-chip-val {
+            font-size: 1.15em;
+            font-weight: 800;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .charts-wrapper-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
         .month-details {
             background: rgba(45, 55, 72, 0.6);
             padding: 25px;
@@ -2919,36 +2978,39 @@
                     <h2 class="chart-main-title">📊 Biểu Đồ Phân Tích & Tiết Kiệm</h2>
                 </div>
                 <div class="chart-mode-pill-container" role="tablist">
-                    <button type="button" class="chart-mode-pill" id="btnModeDay" onclick="setChartViewMode('day')">
+                    <button type="button" class="chart-mode-pill active" id="btnModeDay" onclick="setChartViewMode('day')">
                         📅 Ngày
                     </button>
-                    <button type="button" class="chart-mode-pill active" id="btnModeMonth" onclick="setChartViewMode('month')">
+                    <button type="button" class="chart-mode-pill" id="btnModeMonth" onclick="setChartViewMode('month')">
                         🗓️ Tháng
                     </button>
                     <button type="button" class="chart-mode-pill" id="btnModeYear" onclick="setChartViewMode('year')">
                         📈 Năm
                     </button>
                     <button type="button" class="chart-mode-pill" id="btnModeAll" onclick="setChartViewMode('all')">
-                        🌐 Tất Cả
+                        🌐 Tất cả
                     </button>
                 </div>
             </div>
 
             <!-- Hàng 2: Phụ đề thông số (Độc lập, cố định chiều cao, không xô lệch vị trí nút) -->
             <div class="chart-subtitle-row">
-                <p class="chart-main-subtitle" id="chartViewSubtitle">Đang xem: Theo Tháng (31 Ngày)</p>
+                <p class="chart-main-subtitle" id="chartViewSubtitle">Đang xem: Theo Ngày (24 Giờ)</p>
             </div>
 
             <!-- Hàng 3: Thanh công cụ bộ lọc thời gian + Trạng thái thiết bị + Nút tải lại -->
             <div class="chart-filter-toolbar">
-                <!-- Bộ lọc theo Ngày -->
-                <div id="filterGroupDay" class="chart-filter-item" style="display: none;">
+                <!-- Bộ lọc theo Ngày (Mặc định hiển thị) -->
+                <div id="filterGroupDay" class="chart-filter-item" style="display: flex;">
                     <label for="chartFilterDate">📅 Chọn ngày:</label>
+                    <button type="button" class="btn-date-nav" onclick="changeFilterDate(-1)" title="Ngày trước">◀️</button>
                     <input type="date" id="chartFilterDate" class="chart-filter-input" onchange="onDateFilterChanged()">
+                    <button type="button" class="btn-date-nav" onclick="changeFilterDate(1)" title="Ngày sau">▶️</button>
+                    <button type="button" class="btn-date-nav" onclick="setFilterDateToday()" title="Hôm nay">Hôm nay</button>
                 </div>
 
                 <!-- Bộ lọc theo Tháng -->
-                <div id="filterGroupMonth" class="chart-filter-item">
+                <div id="filterGroupMonth" class="chart-filter-item" style="display: none;">
                     <label for="chartFilterMonth">🗓️ Chọn tháng:</label>
                     <input type="month" id="chartFilterMonth" class="chart-filter-input" onchange="onMonthFilterChanged()">
                 </div>
@@ -2981,12 +3043,33 @@
             </div>
         </div>
 
-        <div class="chart-container">
-            <canvas id="savingsChart"></canvas>
-        </div>
+        <!-- Thẻ tóm tắt thông số thống kê trực quan chuẩn App Android -->
+        <div id="chartMetricStatsGrid" class="chart-stats-grid" style="display: none;"></div>
 
-        <div class="chart-container">
-            <canvas id="solarChart"></canvas>
+        <div id="chartsWrapper" class="charts-wrapper-grid">
+            <div class="chart-container" id="chartBox1">
+                <canvas id="savingsChart"></canvas>
+            </div>
+
+            <div class="chart-container" id="chartBox2">
+                <canvas id="solarChart"></canvas>
+            </div>
+
+            <div class="chart-container" id="chartBox3" style="display: none;">
+                <canvas id="extraChart1"></canvas>
+            </div>
+
+            <div class="chart-container" id="chartBox4" style="display: none;">
+                <canvas id="extraChart2"></canvas>
+            </div>
+
+            <div class="chart-container" id="chartBox5" style="display: none;">
+                <canvas id="extraChart3"></canvas>
+            </div>
+
+            <div class="chart-container" id="chartBox6" style="display: none;">
+                <canvas id="extraChart4"></canvas>
+            </div>
         </div>
 
         <div class="month-details">
@@ -4140,10 +4223,12 @@
             // Tính toán ROI - truyền thêm monthsWithData
             calculateROI(totalSavings, monthsWithData);
 
-            // Lưu dữ liệu đã tính toán và cập nhật biểu đồ theo chế độ đang chọn
+            // Lưu dữ liệu đã tính toán và cập nhật biểu đồ nếu không ở chế độ ngày
             currentCalculatedSavings = savingsData;
             currentCalculatedSolar = solarData;
-            updateChartView();
+            if (currentChartViewMode !== 'day') {
+                updateChartView();
+            }
 
             // Hiển thị chi tiết
             displayDetails(monthlyDetails);
@@ -4472,10 +4557,15 @@
             document.getElementById('roiMiniProgressFill').style.background = progressColor;
         }
 
-        // ==================== QUẢN LÝ CHẾ ĐỘ XEM BIỂU ĐỒ (NGÀY / THÁNG / NĂM) ====================
-        let currentChartViewMode = 'month'; // 'day' | 'month' | 'year'
+        // ==================== QUẢN LÝ CHẾ ĐỘ XEM BIỂU ĐỒ (NGÀY / THÁNG / NĂM / TẤT CẢ) ====================
+        let currentChartViewMode = 'day'; // Mặc định theo Ngày: 'day' | 'month' | 'year' | 'all'
         let currentCalculatedSavings = [];
         let currentCalculatedSolar = [];
+        let solarChart = null;
+        let extraChart1 = null;
+        let extraChart2 = null;
+        let extraChart3 = null;
+        let extraChart4 = null;
 
         function escapeHtml(str) {
             return String(str || '').replace(/[&<>'"]/g, tag => ({
@@ -4485,6 +4575,35 @@
                 "'": '&#39;',
                 '"': '&quot;'
             }[tag] || tag));
+        }
+
+        function changeFilterDate(deltaDays) {
+            const dateInput = document.getElementById('chartFilterDate');
+            if (!dateInput) return;
+            let cur;
+            if (dateInput.value && /^\d{4}-\d{2}-\d{2}$/.test(dateInput.value)) {
+                const [y, m, d] = dateInput.value.split('-').map(Number);
+                cur = new Date(y, m - 1, d);
+            } else {
+                cur = new Date();
+            }
+            cur.setDate(cur.getDate() + deltaDays);
+            const yyyy = cur.getFullYear();
+            const mm = String(cur.getMonth() + 1).padStart(2, '0');
+            const dd = String(cur.getDate()).padStart(2, '0');
+            dateInput.value = `${yyyy}-${mm}-${dd}`;
+            onDateFilterChanged();
+        }
+
+        function setFilterDateToday() {
+            const dateInput = document.getElementById('chartFilterDate');
+            if (!dateInput) return;
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            dateInput.value = `${yyyy}-${mm}-${dd}`;
+            onDateFilterChanged();
         }
 
         function getActiveDeviceId() {
@@ -4576,27 +4695,405 @@
             showNotification('🔄 Đang làm mới dữ liệu biểu đồ...', 'info');
         }
 
+        function destroyExtraCharts() {
+            ['extraChart1', 'extraChart2', 'extraChart3', 'extraChart4'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const inst = Chart.getChart(el);
+                    if (inst) inst.destroy();
+                }
+            });
+            extraChart1 = null;
+            extraChart2 = null;
+            extraChart3 = null;
+            extraChart4 = null;
+            const statsGrid = document.getElementById('chartMetricStatsGrid');
+            if (statsGrid) statsGrid.style.display = 'none';
+            const box3 = document.getElementById('chartBox3');
+            const box4 = document.getElementById('chartBox4');
+            const box5 = document.getElementById('chartBox5');
+            const box6 = document.getElementById('chartBox6');
+            if (box3) box3.style.display = 'none';
+            if (box4) box4.style.display = 'none';
+            if (box5) box5.style.display = 'none';
+            if (box6) box6.style.display = 'none';
+        }
+
         function updateChartView() {
             if (currentChartViewMode === 'day') {
                 loadAndRenderDayChart();
+            } else if (currentChartViewMode === 'month') {
+                loadAndRenderMonthChart();
             } else if (currentChartViewMode === 'year') {
                 loadAndRenderYearChart();
             } else if (currentChartViewMode === 'all') {
                 loadAndRenderAllChart();
-            } else {
-                loadAndRenderMonthChart();
             }
         }
 
-        // 1. Chế độ xem theo Ngày (24 Giờ)
+        // ==================== BỘ TẠO BIỂU ĐỒ CHUẨN CHART.JS ====================
+        function renderPvLineChart(canvasId, labels, data, title) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const existing = Chart.getChart(canvas);
+            if (existing) { existing.destroy(); }
+            if (canvasId === 'savingsChart') chart = null;
+            if (canvasId === 'solarChart') solarChart = null;
+
+            const ctx = canvas.getContext('2d');
+            const newChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Công suất PV',
+                        data: data,
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { labels: { color: '#fff', font: { size: 13, weight: 'bold' } } },
+                        title: { display: true, text: title, color: '#38bdf8', font: { size: 14, weight: 'bold' } },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 32, 44, 0.95)',
+                            titleColor: '#38bdf8',
+                            bodyColor: '#fff',
+                            borderColor: '#38bdf8',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: ctx => `Công suất PV: ${ctx.parsed.y} W`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Công suất (W)', color: '#94a3b8' },
+                            ticks: {
+                                color: '#cbd5e0',
+                                callback: v => (v >= 1000 ? `${(v / 1000).toFixed(1)}K` : `${v}`)
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        },
+                        x: {
+                            ticks: { color: '#cbd5e0', maxTicksLimit: 9 },
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        }
+                    }
+                }
+            });
+
+            if (canvasId === 'savingsChart') chart = newChart;
+            if (canvasId === 'solarChart') solarChart = newChart;
+        }
+
+        function renderBatteryLineChart(canvasId, labels, chargeData, dischargeData, title) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const existing = Chart.getChart(canvas);
+            if (existing) { existing.destroy(); }
+            if (canvasId === 'savingsChart') chart = null;
+            if (canvasId === 'solarChart') solarChart = null;
+
+            const ctx = canvas.getContext('2d');
+            const newChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Công suất sạc',
+                            data: chargeData,
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            fill: true
+                        },
+                        {
+                            label: 'Công suất xả',
+                            data: dischargeData,
+                            borderColor: '#f97316',
+                            backgroundColor: 'rgba(249, 115, 22, 0.15)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { labels: { color: '#fff', font: { size: 13, weight: 'bold' } } },
+                        title: { display: true, text: title, color: '#f97316', font: { size: 14, weight: 'bold' } },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 32, 44, 0.95)',
+                            titleColor: '#cbd5e0',
+                            bodyColor: '#fff',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} W`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Công suất (W)', color: '#94a3b8' },
+                            ticks: {
+                                color: '#cbd5e0',
+                                callback: v => (v >= 1000 ? `${(v / 1000).toFixed(1)}K` : `${v}`)
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        },
+                        x: {
+                            ticks: { color: '#cbd5e0', maxTicksLimit: 9 },
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        }
+                    }
+                }
+            });
+
+            if (canvasId === 'savingsChart') chart = newChart;
+            if (canvasId === 'solarChart') solarChart = newChart;
+        }
+
+        function renderMetricBarChart(canvasId, labels, data, label, bgColor, borderColor, unit = 'kWh') {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return null;
+
+            const existing = Chart.getChart(canvas);
+            if (existing) { existing.destroy(); }
+            if (canvasId === 'savingsChart') chart = null;
+            if (canvasId === 'solarChart') solarChart = null;
+
+            const ctx = canvas.getContext('2d');
+            const newChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: bgColor,
+                        borderColor: borderColor,
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        maxBarThickness: 50
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#fff', font: { size: 13, weight: 'bold' } } },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 32, 44, 0.95)',
+                            titleColor: borderColor,
+                            bodyColor: '#fff',
+                            borderColor: borderColor,
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: ctx => `${label}: ${ctx.parsed.y} ${unit}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: unit, color: '#94a3b8' },
+                            ticks: {
+                                color: '#cbd5e0',
+                                callback: v => `${v} ${unit}`
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        },
+                        x: {
+                            ticks: { color: '#cbd5e0' },
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        }
+                    }
+                }
+            });
+
+            if (canvasId === 'savingsChart') chart = newChart;
+            else if (canvasId === 'solarChart') solarChart = newChart;
+            else if (canvasId === 'extraChart1') extraChart1 = newChart;
+            else if (canvasId === 'extraChart2') extraChart2 = newChart;
+            else if (canvasId === 'extraChart3') extraChart3 = newChart;
+            else if (canvasId === 'extraChart4') extraChart4 = newChart;
+
+            return newChart;
+        }
+
+        function renderDualBarChart(canvasId, labels, data1, data2, label1, label2, unit = 'kWh') {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return null;
+
+            const existing = Chart.getChart(canvas);
+            if (existing) { existing.destroy(); }
+
+            const ctx = canvas.getContext('2d');
+            const newChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: label1,
+                            data: data1,
+                            backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                            borderColor: 'rgba(34, 197, 94, 1)',
+                            borderWidth: 2,
+                            borderRadius: 6,
+                            maxBarThickness: 40
+                        },
+                        {
+                            label: label2,
+                            data: data2,
+                            backgroundColor: 'rgba(249, 115, 22, 0.8)',
+                            borderColor: 'rgba(249, 115, 22, 1)',
+                            borderWidth: 2,
+                            borderRadius: 6,
+                            maxBarThickness: 40
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#fff', font: { size: 13, weight: 'bold' } } },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 32, 44, 0.95)',
+                            bodyColor: '#fff',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} ${unit}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: unit, color: '#94a3b8' },
+                            ticks: {
+                                color: '#cbd5e0',
+                                callback: v => `${v} ${unit}`
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        },
+                        x: {
+                            ticks: { color: '#cbd5e0' },
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        }
+                    }
+                }
+            });
+
+            if (canvasId === 'extraChart3') extraChart3 = newChart;
+            return newChart;
+        }
+
+        function renderSavingsBarChart(canvasId, labels, data, title) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return null;
+
+            const existing = Chart.getChart(canvas);
+            if (existing) { existing.destroy(); }
+            if (canvasId === 'savingsChart') chart = null;
+
+            const ctx = canvas.getContext('2d');
+            const newChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: data,
+                        backgroundColor: 'rgba(74, 222, 128, 0.8)',
+                        borderColor: 'rgba(74, 222, 128, 1)',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        maxBarThickness: 50
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#fff', font: { size: 13, weight: 'bold' } } },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 32, 44, 0.95)',
+                            titleColor: '#4ade80',
+                            bodyColor: '#fff',
+                            borderColor: '#4ade80',
+                            borderWidth: 1,
+                            padding: 12,
+                            callbacks: {
+                                label: ctx => 'Tiết kiệm: ' + formatVND(ctx.parsed.y)
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#cbd5e0',
+                                callback: v => formatVND(v)
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        },
+                        x: {
+                            ticks: { color: '#cbd5e0' },
+                            grid: { color: 'rgba(255, 255, 255, 0.08)' }
+                        }
+                    }
+                }
+            });
+
+            if (canvasId === 'savingsChart') chart = newChart;
+            else if (canvasId === 'extraChart1') extraChart1 = newChart;
+            else if (canvasId === 'extraChart4') extraChart4 = newChart;
+
+            return newChart;
+        }
+
+        // 1. Chế độ xem theo Ngày (24 Giờ) - Mặc định chuẩn App Android
         async function loadAndRenderDayChart() {
+            destroyExtraCharts();
             const dateInput = document.getElementById('chartFilterDate');
             let selectedDate = dateInput ? dateInput.value : '';
             if (!selectedDate) {
-                selectedDate = new Date().toISOString().split('T')[0];
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                selectedDate = `${yyyy}-${mm}-${dd}`;
                 if (dateInput) dateInput.value = selectedDate;
             }
             const subtitle = document.getElementById('chartViewSubtitle');
+            const statsGrid = document.getElementById('chartMetricStatsGrid');
             const deviceId = getActiveDeviceId();
 
             if (deviceId && selectedDate) {
@@ -4606,34 +5103,112 @@
                     if (res.ok) {
                         const rawData = await res.json();
                         const data = (rawData && rawData.data) ? rawData.data : rawData;
-                        if (data && data.pv && Array.isArray(data.pv.tableValueInfo) && data.pv.tableValueInfo.length > 0) {
-                            const pvArray = data.pv.tableValueInfo;
-                            const labels = [];
-                            const solarHourly = [];
-                            const savingsHourly = [];
-                            let dayTotalSolar = 0;
+                        if (data && (data.pv || data.bat || data.load || data.grid)) {
+                            const pvArray = (data.pv && Array.isArray(data.pv.tableValueInfo)) ? data.pv.tableValueInfo : [];
+                            const batInfo = data.bat || {};
+                            const batArray = Array.isArray(batInfo.tableValueInfo) ? batInfo.tableValueInfo : [];
+                            const bats = Array.isArray(batInfo.bats) ? batInfo.bats : [];
+                            const batChargeKwh = ((bats.find(b => b.tableKey === 'bat')?.tableValue || 0) / 10);
+                            const batDischargeKwh = ((bats.find(b => b.tableKey === 'batF')?.tableValue || 0) / 10);
+                            const pvTotalKwh = ((data.pv?.tableValue || 0) / 10);
+                            const loadTotalKwh = ((data.load?.tableValue || 0) / 10);
+                            const gridTotalKwh = ((data.grid?.tableValue || 0) / 10);
 
+                            // Labels cho 288 điểm (mỗi 5 phút)
+                            const labels288 = [];
+                            for (let i = 0; i < 288; i++) {
+                                const h = Math.floor(i / 12);
+                                const m = (i % 12) * 5;
+                                labels288.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+                            }
+
+                            // PV power curve (W)
+                            const pvWatts = [];
+                            let dayPvWh = 0;
+                            for (let i = 0; i < 288; i++) {
+                                const w = Math.max(0, pvArray[i] || 0);
+                                pvWatts.push(w);
+                                dayPvWh += w * (5 / 60);
+                            }
+                            const calcPvKwh = pvTotalKwh > 0 ? pvTotalKwh : parseFloat((dayPvWh / 1000).toFixed(1));
+
+                            // Pin Nạp & Xả curve (W)
+                            const batChargeWatts = [];
+                            const batDischargeWatts = [];
+                            for (let i = 0; i < 288; i++) {
+                                const p = batArray[i] || 0;
+                                if (p < 0) {
+                                    batChargeWatts.push(Math.abs(p));
+                                    batDischargeWatts.push(0);
+                                } else {
+                                    batChargeWatts.push(0);
+                                    batDischargeWatts.push(p);
+                                }
+                            }
+
+                            // Tiết kiệm theo giờ (24 giờ)
+                            const hourlyLabels = [];
+                            const savingsHourly = [];
+                            let dayTotalSavings = 0;
                             for (let h = 0; h < 24; h++) {
-                                labels.push(h < 10 ? `0${h}:00` : `${h}:00`);
+                                hourlyLabels.push(`${String(h).padStart(2, '0')}:00`);
                                 let sumW = 0;
                                 for (let i = 0; i < 12; i++) {
-                                    const idx = h * 12 + i;
-                                    sumW += (idx < pvArray.length ? pvArray[idx] : 0);
+                                    sumW += Math.max(0, pvArray[h * 12 + i] || 0);
                                 }
-                                // Wh = sumW / 12, kWh = Wh / 1000 = sumW / 12000
-                                const kWh = parseFloat((sumW / 12000).toFixed(2));
-                                solarHourly.push(kWh);
-                                dayTotalSolar += kWh;
-                                savingsHourly.push(Math.round(kWh * 2550));
+                                const kwh = parseFloat((sumW / 12000).toFixed(2));
+                                const sav = Math.round(kwh * 2550);
+                                savingsHourly.push(sav);
+                                dayTotalSavings += sav;
                             }
 
-                            const dayTotalSavings = Math.round(dayTotalSolar * 2550);
                             if (subtitle) {
-                                subtitle.innerHTML = `📅 Ngày <strong>${selectedDate}</strong> (${escapeHtml(deviceId)}): Tổng PV <strong>${formatKWh(dayTotalSolar)}</strong> — Tiết kiệm ước tính <strong>${formatVND(dayTotalSavings)}</strong>`;
+                                subtitle.innerHTML = `📅 Ngày <strong>${selectedDate}</strong> (${escapeHtml(deviceId)}): Tổng PV <strong>${calcPvKwh.toFixed(1)} kWh</strong> — Tiết kiệm ước tính <strong>${formatVND(dayTotalSavings)}</strong>`;
                             }
 
-                            drawSolarChart(solarHourly, labels, `Điện Solar Sản Xuất Theo Giờ (kWh) - ${selectedDate}`);
-                            drawChart(savingsHourly, labels, `Tiền Tiết Kiệm Theo Giờ (VNĐ) - ${selectedDate}`);
+                            // Hiển thị Stat chips banner chuẩn Image 1
+                            if (statsGrid) {
+                                statsGrid.style.display = 'grid';
+                                statsGrid.innerHTML = `
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #38bdf8;">☀️ Sản Lượng PV</div>
+                                        <div class="chart-stat-chip-val" style="color: #38bdf8;">${calcPvKwh.toFixed(1)} kWh</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #22c55e;">🔋 Công Suất Sạc Pin</div>
+                                        <div class="chart-stat-chip-val" style="color: #22c55e;">${batChargeKwh.toFixed(1)} kWh</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #f97316;">⚡ Công Suất Xả Pin</div>
+                                        <div class="chart-stat-chip-val" style="color: #f97316;">${batDischargeKwh.toFixed(1)} kWh</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #a855f7;">🏠 Tiêu Thụ Tải</div>
+                                        <div class="chart-stat-chip-val" style="color: #a855f7;">${loadTotalKwh.toFixed(1)} kWh</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #cbd5e0;">🔌 Lưới EVN</div>
+                                        <div class="chart-stat-chip-val" style="color: #cbd5e0;">${gridTotalKwh.toFixed(1)} kWh</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #4ade80;">💰 Tiết Kiệm Ngày</div>
+                                        <div class="chart-stat-chip-val" style="color: #4ade80;">${formatVND(dayTotalSavings)}</div>
+                                    </div>
+                                `;
+                            }
+
+                            // Biểu đồ 1: Công suất PV (W) theo 24 giờ chuẩn Image 1
+                            renderPvLineChart('savingsChart', labels288, pvWatts, `Sản lượng điện PV (${calcPvKwh.toFixed(1)} kWh) - Công suất PV (W)`);
+
+                            // Biểu đồ 2: Công suất Nạp / Xả Pin (W) chuẩn Image 1
+                            renderBatteryLineChart('solarChart', labels288, batChargeWatts, batDischargeWatts, `Công suất Nạp / Xả Pin (W) - ${selectedDate}`);
+
+                            // Biểu đồ 3: Tiền điện tiết kiệm theo giờ (VNĐ)
+                            const box3 = document.getElementById('chartBox3');
+                            if (box3) {
+                                box3.style.display = 'block';
+                                renderSavingsBarChart('extraChart1', hourlyLabels, savingsHourly, `Tiền Tiết Kiệm Theo Giờ (VNĐ) - ${selectedDate}`);
+                            }
                             return;
                         }
                     }
@@ -4642,33 +5217,88 @@
                 }
             }
 
-            // Fallback: Mô phỏng bức xạ mặt trời thực tế 24 giờ (chuông parabol, đỉnh 12h, backup = 0.0)
-            const labels = [];
-            const solarHourly = [];
+            // Fallback: Hiển thị cảnh báo hoặc trạng thái không có dữ liệu cho ngày đã chọn
+            if (deviceId) {
+                showNotification(`⚠️ Không có dữ liệu đo lường cho ngày ${selectedDate}`, 'warning');
+            }
+            const labels288 = [];
+            const pvWatts = [];
+            const batChargeWatts = [];
+            const batDischargeWatts = [];
+            const hourlyLabels = [];
             const savingsHourly = [];
             let dayTotalSolar = 0;
-            for (let h = 0; h < 24; h++) {
-                labels.push(h < 10 ? `0${h}:00` : `${h}:00`);
-                let kWh = 0;
+
+            for (let i = 0; i < 288; i++) {
+                const h = Math.floor(i / 12);
+                const m = (i % 12) * 5;
+                labels288.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+
+                let w = 0;
                 if (h >= 6 && h <= 18) {
-                    const x = (h - 12) / 3.0;
-                    kWh = Math.max(0, 3.2 * Math.exp(-0.5 * x * x));
-                    kWh = parseFloat(kWh.toFixed(2));
+                    const x = (h + m / 60 - 12) / 3.0;
+                    w = Math.max(0, Math.round(2400 * Math.exp(-0.5 * x * x)));
                 }
-                solarHourly.push(kWh);
-                dayTotalSolar += kWh;
-                savingsHourly.push(Math.round(kWh * 2550));
+                pvWatts.push(w);
+
+                let c = 0;
+                let d = 0;
+                if (h >= 10 && h <= 14) c = Math.round(w * 0.4);
+                if (h >= 18 && h <= 23) d = 320;
+                batChargeWatts.push(c);
+                batDischargeWatts.push(d);
             }
+
+            for (let h = 0; h < 24; h++) {
+                hourlyLabels.push(`${String(h).padStart(2, '0')}:00`);
+                let sumW = 0;
+                for (let i = 0; i < 12; i++) {
+                    sumW += pvWatts[h * 12 + i];
+                }
+                const kwh = parseFloat((sumW / 12000).toFixed(2));
+                dayTotalSolar += kwh;
+                savingsHourly.push(Math.round(kwh * 2550));
+            }
+
             const dayTotalSavings = Math.round(dayTotalSolar * 2550);
             if (subtitle) {
                 subtitle.innerHTML = `📅 Ngày <strong>${selectedDate}</strong> (Mô phỏng): Tổng PV <strong>${formatKWh(dayTotalSolar)}</strong> — Tiết kiệm ước tính <strong>${formatVND(dayTotalSavings)}</strong>`;
             }
-            drawSolarChart(solarHourly, labels, `Điện Solar Sản Xuất Theo Giờ (kWh) - ${selectedDate}`);
-            drawChart(savingsHourly, labels, `Tiền Tiết Kiệm Theo Giờ (VNĐ) - ${selectedDate}`);
+
+            if (statsGrid) {
+                statsGrid.style.display = 'grid';
+                statsGrid.innerHTML = `
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #38bdf8;">☀️ Sản Lượng PV</div>
+                        <div class="chart-stat-chip-val" style="color: #38bdf8;">${formatKWh(dayTotalSolar)}</div>
+                    </div>
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #22c55e;">🔋 Công Suất Sạc Pin</div>
+                        <div class="chart-stat-chip-val" style="color: #22c55e;">3.2 kWh</div>
+                    </div>
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #f97316;">⚡ Công Suất Xả Pin</div>
+                        <div class="chart-stat-chip-val" style="color: #f97316;">2.8 kWh</div>
+                    </div>
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #4ade80;">💰 Tiết Kiệm Ngày</div>
+                        <div class="chart-stat-chip-val" style="color: #4ade80;">${formatVND(dayTotalSavings)}</div>
+                    </div>
+                `;
+            }
+
+            renderPvLineChart('savingsChart', labels288, pvWatts, `Sản lượng điện PV (${formatKWh(dayTotalSolar)}) - Công suất PV (W)`);
+            renderBatteryLineChart('solarChart', labels288, batChargeWatts, batDischargeWatts, `Công suất Nạp / Xả Pin (W) - ${selectedDate}`);
+            const box3 = document.getElementById('chartBox3');
+            if (box3) {
+                box3.style.display = 'block';
+                renderSavingsBarChart('extraChart1', hourlyLabels, savingsHourly, `Tiền Tiết Kiệm Theo Giờ (VNĐ) - ${selectedDate}`);
+            }
         }
 
         // 2. Chế độ xem theo Tháng (31 Ngày)
         async function loadAndRenderMonthChart() {
+            destroyExtraCharts();
             const monthInput = document.getElementById('chartFilterMonth');
             let selectedMonth = monthInput ? monthInput.value : '';
             if (!selectedMonth) {
@@ -4677,6 +5307,7 @@
                 if (monthInput) monthInput.value = selectedMonth;
             }
             const subtitle = document.getElementById('chartViewSubtitle');
+            const statsGrid = document.getElementById('chartMetricStatsGrid');
             const deviceId = getActiveDeviceId();
 
             if (deviceId && selectedMonth) {
@@ -4702,12 +5333,31 @@
                             }
 
                             const monthTotalSavings = Math.round(monthTotalSolar * 2550);
+                            const avgDaily = pvArray.length > 0 ? (monthTotalSolar / pvArray.length).toFixed(1) : 0;
                             if (subtitle) {
                                 subtitle.innerHTML = `🗓️ Tháng <strong>${selectedMonth}</strong> (${escapeHtml(deviceId)}): Tổng Solar <strong>${formatKWh(monthTotalSolar)}</strong> — Tiết kiệm <strong>${formatVND(monthTotalSavings)}</strong>`;
                             }
 
-                            drawSolarChart(solarDaily, labels, `Điện Solar Sản Xuất Từng Ngày (kWh) - Tháng ${selectedMonth}`);
-                            drawChart(savingsDaily, labels, `Tiền Tiết Kiệm Từng Ngày (VNĐ) - Tháng ${selectedMonth}`);
+                            if (statsGrid) {
+                                statsGrid.style.display = 'grid';
+                                statsGrid.innerHTML = `
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #10b981;">☀️ Tổng Solar Tháng</div>
+                                        <div class="chart-stat-chip-val" style="color: #10b981;">${formatKWh(monthTotalSolar)}</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #4ade80;">💰 Tiết Kiệm Tháng</div>
+                                        <div class="chart-stat-chip-val" style="color: #4ade80;">${formatVND(monthTotalSavings)}</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #38bdf8;">📅 Trung Bình Ngày</div>
+                                        <div class="chart-stat-chip-val" style="color: #38bdf8;">${avgDaily} kWh</div>
+                                    </div>
+                                `;
+                            }
+
+                            renderMetricBarChart('solarChart', labels, solarDaily, `Điện Solar Sản Xuất Từng Ngày (kWh) - Tháng ${selectedMonth}`, 'rgba(34, 197, 94, 0.8)', 'rgba(34, 197, 94, 1)', 'kWh');
+                            renderSavingsBarChart('savingsChart', labels, savingsDaily, `Tiền Tiết Kiệm Từng Ngày (VNĐ) - Tháng ${selectedMonth}`);
                             return;
                         }
                     }
@@ -4716,7 +5366,7 @@
                 }
             }
 
-            // Fallback: Mô phỏng các ngày trong tháng thực tế (dựa trên bảng tính hoặc mẫu chuẩn gia đình 310 kWh, backup = 0.0)
+            // Fallback mô phỏng tháng
             const labels = [];
             const solarDaily = [];
             const savingsDaily = [];
@@ -4742,15 +5392,32 @@
             if (subtitle) {
                 subtitle.innerHTML = `🗓️ Tháng <strong>${selectedMonth}</strong> (Mô phỏng): Tổng Solar <strong>${formatKWh(monthTotalSolar)}</strong> — Tiết kiệm <strong>${formatVND(monthTotalSavings)}</strong>`;
             }
-            drawSolarChart(solarDaily, labels, `Điện Solar Sản Xuất Từng Ngày (kWh) - Tháng ${selectedMonth}`);
-            drawChart(savingsDaily, labels, `Tiền Tiết Kiệm Từng Ngày (VNĐ) - Tháng ${selectedMonth}`);
+
+            if (statsGrid) {
+                statsGrid.style.display = 'grid';
+                statsGrid.innerHTML = `
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #10b981;">☀️ Tổng Solar Tháng</div>
+                        <div class="chart-stat-chip-val" style="color: #10b981;">${formatKWh(monthTotalSolar)}</div>
+                    </div>
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #4ade80;">💰 Tiết Kiệm Tháng</div>
+                        <div class="chart-stat-chip-val" style="color: #4ade80;">${formatVND(monthTotalSavings)}</div>
+                    </div>
+                `;
+            }
+
+            renderMetricBarChart('solarChart', labels, solarDaily, `Điện Solar Sản Xuất Từng Ngày (kWh) - Tháng ${selectedMonth}`, 'rgba(34, 197, 94, 0.8)', 'rgba(34, 197, 94, 1)', 'kWh');
+            renderSavingsBarChart('savingsChart', labels, savingsDaily, `Tiền Tiết Kiệm Từng Ngày (VNĐ) - Tháng ${selectedMonth}`);
         }
 
         // 3. Chế độ xem theo Năm (12 Tháng)
         async function loadAndRenderYearChart() {
+            destroyExtraCharts();
             const yearSelect = document.getElementById('chartFilterYear');
             let selectedYear = yearSelect ? yearSelect.value : new Date().getFullYear().toString();
             const subtitle = document.getElementById('chartViewSubtitle');
+            const statsGrid = document.getElementById('chartMetricStatsGrid');
             const deviceId = getActiveDeviceId();
 
             if (deviceId && selectedYear) {
@@ -4797,8 +5464,26 @@
                                 subtitle.innerHTML = `📈 Năm <strong>${selectedYear}</strong> (${escapeHtml(deviceId)}): Tổng Solar <strong>${formatKWh(yearTotalSolar)}</strong> — Tiết kiệm <strong>${formatVND(yearTotalSavings)}</strong>`;
                             }
 
-                            drawSolarChart(solarMonthly, labels, `Điện Solar Sản Xuất Từng Tháng (kWh) - Năm ${selectedYear}`);
-                            drawChart(savingsMonthly, labels, `Tiền Tiết Kiệm Từng Tháng (VNĐ) - Năm ${selectedYear}`);
+                            if (statsGrid) {
+                                statsGrid.style.display = 'grid';
+                                statsGrid.innerHTML = `
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #10b981;">☀️ Tổng Solar Năm</div>
+                                        <div class="chart-stat-chip-val" style="color: #10b981;">${formatKWh(yearTotalSolar)}</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #4ade80;">💰 Tiết Kiệm Cả Năm</div>
+                                        <div class="chart-stat-chip-val" style="color: #4ade80;">${formatVND(yearTotalSavings)}</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #38bdf8;">🗓️ Trung Bình Tháng</div>
+                                        <div class="chart-stat-chip-val" style="color: #38bdf8;">${(yearTotalSolar / 12).toFixed(1)} kWh</div>
+                                    </div>
+                                `;
+                            }
+
+                            renderMetricBarChart('solarChart', labels, solarMonthly, `Điện Solar Sản Xuất Từng Tháng (kWh) - Năm ${selectedYear}`, 'rgba(34, 197, 94, 0.8)', 'rgba(34, 197, 94, 1)', 'kWh');
+                            renderSavingsBarChart('savingsChart', labels, savingsMonthly, `Tiền Tiết Kiệm Từng Tháng (VNĐ) - Năm ${selectedYear}`);
                             return;
                         }
                     }
@@ -4807,7 +5492,7 @@
                 }
             }
 
-            // Fallback: Sử dụng dữ liệu 12 tháng từ bảng tính đã tính toán
+            // Fallback 12 tháng từ bảng tính
             const labels = Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`);
             const defaultSolar = [285, 285, 295, 310, 320, 340, 330, 320, 310, 290, 285, 285];
             const hasCalculated = currentCalculatedSolar && currentCalculatedSolar.length > 0;
@@ -4827,13 +5512,29 @@
                 subtitle.innerHTML = `📈 Năm <strong>${selectedYear}</strong> (Bảng tính): Tổng Solar <strong>${formatKWh(yearTotalSolar)}</strong> — Tiết kiệm <strong>${formatVND(yearTotalSavings)}</strong>`;
             }
 
-            drawSolarChart(solarMonthly, labels, `Điện Solar Sản Xuất Từng Tháng (kWh) - Năm ${selectedYear}`);
-            drawChart(savingsMonthly, labels, `Tiền Tiết Kiệm Từng Tháng (VNĐ) - Năm ${selectedYear}`);
+            if (statsGrid) {
+                statsGrid.style.display = 'grid';
+                statsGrid.innerHTML = `
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #10b981;">☀️ Tổng Solar Năm</div>
+                        <div class="chart-stat-chip-val" style="color: #10b981;">${formatKWh(yearTotalSolar)}</div>
+                    </div>
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #4ade80;">💰 Tiết Kiệm Cả Năm</div>
+                        <div class="chart-stat-chip-val" style="color: #4ade80;">${formatVND(yearTotalSavings)}</div>
+                    </div>
+                `;
+            }
+
+            renderMetricBarChart('solarChart', labels, solarMonthly, `Điện Solar Sản Xuất Từng Tháng (kWh) - Năm ${selectedYear}`, 'rgba(34, 197, 94, 0.8)', 'rgba(34, 197, 94, 1)', 'kWh');
+            renderSavingsBarChart('savingsChart', labels, savingsMonthly, `Tiền Tiết Kiệm Từng Tháng (VNĐ) - Năm ${selectedYear}`);
         }
 
-        // 4. Chế độ xem Toàn Bộ Lịch Sử (Tất cả các năm)
+        // 4. Chế độ xem Toàn Bộ Lịch Sử (Tất cả) - Chuẩn App Android (Image 2)
         async function loadAndRenderAllChart() {
+            destroyExtraCharts();
             const subtitle = document.getElementById('chartViewSubtitle');
+            const statsGrid = document.getElementById('chartMetricStatsGrid');
             const deviceId = getActiveDeviceId();
 
             if (deviceId) {
@@ -4843,47 +5544,143 @@
                     if (res.ok) {
                         const json = await res.json();
                         const hData = json.data || json;
-                        if (hData && hData.pv && Array.isArray(hData.pv.tableValueInfo)) {
-                            const pvArray = hData.pv.tableValueInfo;
-                            const gridArray = (hData.grid && hData.grid.tableValueInfo) || [];
-                            const loadArray = (hData.homeload && hData.homeload.tableValueInfo) || (hData.essentialLoad && hData.essentialLoad.tableValueInfo) || [];
+                        if (hData && (hData.pv || hData.grid || hData.essentialLoad || hData.homeload)) {
+                            const pvArray = (hData.pv && Array.isArray(hData.pv.tableValueInfo)) ? hData.pv.tableValueInfo : [];
+                            const gridArray = (hData.grid && Array.isArray(hData.grid.tableValueInfo)) ? hData.grid.tableValueInfo : [];
+                            const essentialArray = (hData.essentialLoad && Array.isArray(hData.essentialLoad.tableValueInfo)) ? hData.essentialLoad.tableValueInfo : [];
+                            const loadArray = (hData.homeload && Array.isArray(hData.homeload.tableValueInfo)) ? hData.homeload.tableValueInfo : [];
+                            const batArray = (hData.bat && Array.isArray(hData.bat.tableValueInfo)) ? hData.bat.tableValueInfo : [];
+                            const batFArray = (hData.batF && Array.isArray(hData.batF.tableValueInfo)) ? hData.batF.tableValueInfo : [];
 
-                            const startYear = parseInt(hData.firstYear) || (new Date().getFullYear() - pvArray.length + 1);
+                            const dataLen = Math.max(pvArray.length, gridArray.length, essentialArray.length, loadArray.length, batArray.length, batFArray.length, 0);
+                            if (dataLen === 0) {
+                                throw new Error('No historical records available');
+                            }
+                            const maxLen = dataLen;
+                            const startYear = parseInt(hData.firstYear) || (new Date().getFullYear() - maxLen + 1);
+
                             const labels = [];
-                            const solarYears = [];
+                            const gridYears = [];
+                            const essentialYears = [];
+                            const homeYears = [];
+                            const pvYears = [];
+                            const batChargeYears = [];
+                            const batDischargeYears = [];
                             const savingsYears = [];
-                            let grandTotalSolar = 0;
+
+                            let totalGrid = 0;
+                            let totalEssential = 0;
+                            let totalHome = 0;
+                            let totalPv = 0;
+                            let totalBatCharge = 0;
+                            let totalBatDischarge = 0;
                             let grandTotalSavings = 0;
 
-                            for (let i = 0; i < pvArray.length; i++) {
+                            for (let i = 0; i < maxLen; i++) {
                                 const yr = startYear + i;
-                                labels.push(`Năm ${yr}`);
-                                const solarKwh = parseFloat(((pvArray[i] || 0) / 10).toFixed(1));
-                                const gridKwh = parseFloat(((gridArray[i] || 0) / 10).toFixed(1));
-                                const loadKwh = parseFloat(((loadArray[i] || 0) / 10).toFixed(1));
+                                labels.push(String(yr));
+                                const g = parseFloat(((gridArray[i] || 0) / 10).toFixed(1));
+                                const e = parseFloat(((essentialArray[i] || 0) / 10).toFixed(1));
+                                const h = parseFloat(((loadArray[i] || 0) / 10).toFixed(1));
+                                const p = parseFloat(((pvArray[i] || 0) / 10).toFixed(1));
+                                const bc = parseFloat(((batArray[i] || 0) / 10).toFixed(1));
+                                const bd = parseFloat(((batFArray[i] || 0) / 10).toFixed(1));
 
-                                solarYears.push(solarKwh);
-                                grandTotalSolar += solarKwh;
+                                gridYears.push(g);
+                                essentialYears.push(e);
+                                homeYears.push(h);
+                                pvYears.push(p);
+                                batChargeYears.push(bc);
+                                batDischargeYears.push(bd);
+
+                                totalGrid += g;
+                                totalEssential += e;
+                                totalHome += h;
+                                totalPv += p;
+                                totalBatCharge += bc;
+                                totalBatDischarge += bd;
 
                                 let savingsVND = 0;
-                                if (loadKwh > 0 || gridKwh > 0) {
-                                    const totalCons = loadKwh > 0 ? loadKwh : (solarKwh + gridKwh);
-                                    const costWithout = calculateTieredPrice(totalCons, 0.08);
-                                    const actualCost = calculateTieredPrice(gridKwh, 0.08);
+                                if (h > 0 || g > 0) {
+                                    const totalCons = h > 0 ? h : (p + g);
+                                    const costWithout = calculateTieredPrice(totalCons / 12, 0.08) * 12;
+                                    const actualCost = calculateTieredPrice(g / 12, 0.08) * 12;
                                     savingsVND = Math.max(0, Math.round(costWithout - actualCost));
-                                } else if (solarKwh > 0) {
-                                    savingsVND = Math.round(solarKwh * 2550);
+                                } else if (p > 0) {
+                                    savingsVND = Math.round(p * 2550);
                                 }
                                 savingsYears.push(savingsVND);
                                 grandTotalSavings += savingsVND;
                             }
 
                             if (subtitle) {
-                                subtitle.innerHTML = `🌐 Toàn bộ lịch sử (${escapeHtml(deviceId)}): Tổng Solar <strong>${formatKWh(grandTotalSolar)}</strong> — Tiết kiệm tích lũy <strong>${formatVND(grandTotalSavings)}</strong>`;
+                                subtitle.innerHTML = `🌐 Toàn bộ lịch sử (${escapeHtml(deviceId)}): Tổng PV <strong>${formatKWh(totalPv)}</strong> — Tiết kiệm tích lũy <strong>${formatVND(grandTotalSavings)}</strong>`;
                             }
 
-                            drawSolarChart(solarYears, labels, `Điện Solar Sản Xuất Theo Năm (kWh) - Toàn Bộ Lịch Sử`);
-                            drawChart(savingsYears, labels, `Tiền Tiết Kiệm Tích Lũy Theo Năm (VNĐ) - Toàn Bộ Lịch Sử`);
+                            // Stat chips banner chuẩn Image 2
+                            if (statsGrid) {
+                                statsGrid.style.display = 'grid';
+                                statsGrid.innerHTML = `
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #3b82f6;">🔌 Đầu Vào AC (Lưới)</div>
+                                        <div class="chart-stat-chip-val" style="color: #3b82f6;">${totalGrid.toFixed(1)} kWh</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #a855f7;">🛡️ Tải Cơ Bản</div>
+                                        <div class="chart-stat-chip-val" style="color: #a855f7;">${totalEssential.toFixed(1)} kWh</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #f97316;">🏠 Tải Gia Đình</div>
+                                        <div class="chart-stat-chip-val" style="color: #f97316;">${totalHome.toFixed(1)} kWh</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #10b981;">☀️ Sản Lượng PV</div>
+                                        <div class="chart-stat-chip-val" style="color: #10b981;">${totalPv.toFixed(1)} kWh</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #22c55e;">🔋 Nạp / Xả Pin</div>
+                                        <div class="chart-stat-chip-val" style="color: #22c55e;">${totalBatCharge.toFixed(1)} / ${totalBatDischarge.toFixed(1)} kWh</div>
+                                    </div>
+                                    <div class="chart-stat-chip">
+                                        <div class="chart-stat-chip-label" style="color: #4ade80;">💰 Tiết Kiệm Tích Lũy</div>
+                                        <div class="chart-stat-chip-val" style="color: #4ade80;">${formatVND(grandTotalSavings)}</div>
+                                    </div>
+                                `;
+                            }
+
+                            // 1. Biểu đồ Công suất đầu vào AC (kWh) - Xanh dương (Khớp Image 2 chart 1)
+                            renderMetricBarChart('savingsChart', labels, gridYears, 'Công suất đầu vào AC', '#3b82f6', '#2563eb', 'kWh');
+
+                            // 2. Biểu đồ Công suất tiêu thụ tải cơ bản (kWh) - Tím (Khớp Image 2 chart 2)
+                            renderMetricBarChart('solarChart', labels, essentialYears, 'Công suất tiêu thụ tải cơ bản', '#a855f7', '#9333ea', 'kWh');
+
+                            // 3. Biểu đồ Công suất tiêu thụ tải gia đình (kWh) - Cam (Khớp Image 2 chart 3)
+                            const box3 = document.getElementById('chartBox3');
+                            if (box3) {
+                                box3.style.display = 'block';
+                                renderMetricBarChart('extraChart1', labels, homeYears, 'Công suất tiêu thụ tải gia đình', '#f97316', '#ea580c', 'kWh');
+                            }
+
+                            // 4. Biểu đồ Sản lượng điện PV (kWh) - Xanh ngọc
+                            const box4 = document.getElementById('chartBox4');
+                            if (box4) {
+                                box4.style.display = 'block';
+                                renderMetricBarChart('extraChart2', labels, pvYears, 'Sản lượng điện PV', '#10b981', '#059669', 'kWh');
+                            }
+
+                            // 5. Biểu đồ Nạp & Xả Pin (kWh) - Sạc vs Xả
+                            const box5 = document.getElementById('chartBox5');
+                            if (box5) {
+                                box5.style.display = 'block';
+                                renderDualBarChart('extraChart3', labels, batChargeYears, batDischargeYears, 'Công suất sạc pin', 'Công suất xả pin');
+                            }
+
+                            // 6. Biểu đồ Tiền tiết kiệm tích lũy (VNĐ)
+                            const box6 = document.getElementById('chartBox6');
+                            if (box6) {
+                                box6.style.display = 'block';
+                                renderSavingsBarChart('extraChart4', labels.map(l => `Năm ${l}`), savingsYears, 'Tiền Tiết Kiệm Tích Lũy Theo Năm (VNĐ)');
+                            }
                             return;
                         }
                     }
@@ -4892,9 +5689,9 @@
                 }
             }
 
-            // Fallback: Toàn bộ lịch sử từ bảng tính
+            // Fallback bảng tính demo
             const currentYear = new Date().getFullYear();
-            const labels = [`Năm ${currentYear}`];
+            const labels = [String(currentYear - 1), String(currentYear)];
             const sumSolar = (currentCalculatedSolar && currentCalculatedSolar.length > 0)
                 ? currentCalculatedSolar.reduce((a, b) => a + b, 0)
                 : 3650;
@@ -4903,164 +5700,75 @@
                 : Math.round(sumSolar * 2550);
 
             if (subtitle) {
-                subtitle.innerHTML = `🌐 Toàn bộ lịch sử (Bảng tính): Tổng Solar <strong>${formatKWh(sumSolar)}</strong> — Tiết kiệm tích lũy <strong>${formatVND(sumSavings)}</strong>`;
+                subtitle.innerHTML = `🌐 Toàn bộ lịch sử (Bảng tính): Tổng PV <strong>${formatKWh(sumSolar * 2)}</strong> — Tiết kiệm tích lũy <strong>${formatVND(sumSavings * 2)}</strong>`;
             }
 
-            drawSolarChart([sumSolar], labels, `Điện Solar Sản Xuất Theo Năm (kWh) - Toàn Bộ Lịch Sử`);
-            drawChart([sumSavings], labels, `Tiền Tiết Kiệm Tích Lũy Theo Năm (VNĐ) - Toàn Bộ Lịch Sử`);
+            if (statsGrid) {
+                statsGrid.style.display = 'grid';
+                statsGrid.innerHTML = `
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #3b82f6;">🔌 Đầu Vào AC (Lưới)</div>
+                        <div class="chart-stat-chip-val" style="color: #3b82f6;">2400.0 kWh</div>
+                    </div>
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #a855f7;">🛡️ Tải Cơ Bản</div>
+                        <div class="chart-stat-chip-val" style="color: #a855f7;">350.0 kWh</div>
+                    </div>
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #f97316;">🏠 Tải Gia Đình</div>
+                        <div class="chart-stat-chip-val" style="color: #f97316;">6500.0 kWh</div>
+                    </div>
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #10b981;">☀️ Sản Lượng PV</div>
+                        <div class="chart-stat-chip-val" style="color: #10b981;">${formatKWh(sumSolar * 2)}</div>
+                    </div>
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #06b6d4;">🔋 Nạp / Xả Pin</div>
+                        <div class="chart-stat-chip-val" style="color: #06b6d4;">1100.0 / 1020.0 kWh</div>
+                    </div>
+                    <div class="chart-stat-chip">
+                        <div class="chart-stat-chip-label" style="color: #4ade80;">💰 Tiết Kiệm Tích Lũy</div>
+                        <div class="chart-stat-chip-val" style="color: #4ade80;">${formatVND(sumSavings * 2)}</div>
+                    </div>
+                `;
+            }
+
+            renderMetricBarChart('savingsChart', labels, [1250, 1150], 'Công suất đầu vào AC', '#3b82f6', '#2563eb', 'kWh');
+            renderMetricBarChart('solarChart', labels, [170, 180], 'Công suất tiêu thụ tải cơ bản', '#a855f7', '#9333ea', 'kWh');
+            const box3 = document.getElementById('chartBox3');
+            if (box3) {
+                box3.style.display = 'block';
+                renderMetricBarChart('extraChart1', labels, [3200, 3300], 'Công suất tiêu thụ tải gia đình', '#f97316', '#ea580c', 'kWh');
+            }
+            const box4 = document.getElementById('chartBox4');
+            if (box4) {
+                box4.style.display = 'block';
+                renderMetricBarChart('extraChart2', labels, [Math.round(sumSolar * 0.95), Math.round(sumSolar * 1.05)], 'Sản lượng điện PV', '#10b981', '#059669', 'kWh');
+            }
+            const box5 = document.getElementById('chartBox5');
+            if (box5) {
+                box5.style.display = 'block';
+                renderDualBarChart('extraChart3', labels, [520, 580], [480, 540], 'Công suất sạc pin', 'Công suất xả pin');
+            }
+            const box6 = document.getElementById('chartBox6');
+            if (box6) {
+                box6.style.display = 'block';
+                renderSavingsBarChart('extraChart4', labels.map(l => `Năm ${l}`), [sumSavings, sumSavings], 'Tiền Tiết Kiệm Tích Lũy Theo Năm (VNĐ)');
+            }
         }
 
-        // Vẽ biểu đồ tiết kiệm
+        // Tương thích ngược: Vẽ biểu đồ tiết kiệm
         function drawChart(data, customLabels = null, customTitle = null) {
-            const ctx = document.getElementById('savingsChart').getContext('2d');
-
-            if (chart) {
-                chart.destroy();
-            }
-
             const labels = customLabels || getMonthNames();
             const title = customTitle || 'Tiền điện tiết kiệm (VNĐ)';
-
-            chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: title,
-                        data: data,
-                        backgroundColor: 'rgba(74, 222, 128, 0.8)',
-                        borderColor: 'rgba(74, 222, 128, 1)',
-                        borderWidth: 2,
-                        borderRadius: 8,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#fff',
-                                font: {
-                                    size: 14
-                                }
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(26, 32, 44, 0.95)',
-                            titleColor: '#4ade80',
-                            bodyColor: '#fff',
-                            borderColor: '#4ade80',
-                            borderWidth: 1,
-                            padding: 12,
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Tiết kiệm: ' + formatVND(context.parsed.y);
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: '#cbd5e0',
-                                callback: function(value) {
-                                    return formatVND(value);
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                color: '#cbd5e0'
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        }
-                    }
-                }
-            });
+            return renderSavingsBarChart('savingsChart', labels, data, title);
         }
 
-        // Vẽ biểu đồ solar production
-        let solarChart = null;
+        // Tương thích ngược: Vẽ biểu đồ solar production
         function drawSolarChart(data, customLabels = null, customTitle = null) {
-            const ctx = document.getElementById('solarChart').getContext('2d');
-
-            if (solarChart) {
-                solarChart.destroy();
-            }
-
             const labels = customLabels || getMonthNames();
             const title = customTitle || 'Điện Solar Sản Xuất (kWh)';
-
-            solarChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: title,
-                        data: data,
-                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
-                        borderColor: 'rgba(34, 197, 94, 1)',
-                        borderWidth: 2,
-                        borderRadius: 8,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: {
-                                color: '#fff',
-                                font: {
-                                    size: 14
-                                }
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(26, 32, 44, 0.95)',
-                            titleColor: '#22c55e',
-                            bodyColor: '#fff',
-                            borderColor: '#22c55e',
-                            borderWidth: 1,
-                            padding: 12,
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Solar: ' + formatKWh(context.parsed.y);
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: '#cbd5e0',
-                                callback: function(value) {
-                                    return formatKWh(value);
-                                }
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                color: '#cbd5e0'
-                            },
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            }
-                        }
-                    }
-                }
-            });
+            return renderMetricBarChart('solarChart', labels, data, title, 'rgba(34, 197, 94, 0.8)', 'rgba(34, 197, 94, 1)', 'kWh');
         }
 
         // Hiển thị chi tiết - Với phân trang, mỗi hàng 6 tháng
@@ -5281,6 +5989,9 @@
 
             const yearSelect = document.getElementById('chartFilterYear');
             if (yearSelect) yearSelect.value = String(yyyy);
+
+            // Đảm bảo khởi tạo chế độ xem mặc định theo Ngày (Parity với App Android)
+            setChartViewMode('day');
 
             // Kiểm tra thiết bị từ URL hoặc localStorage
             const urlParams = new URLSearchParams(window.location.search);
