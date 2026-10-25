@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // INITIALIZATION
     // ========================================
-    
+
     // Set up today's date as default
     const today = new Date();
     const dateInput = document.getElementById('dateInput');
@@ -52,17 +52,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // SignalR connection
     let connection;
     let currentDeviceId = '';
-    
+
     // SOC History for real-time chart - REAL DATA ONLY (no mock)
     let socHistory = [];
     const MAX_SOC_HISTORY = 1440; // 24 hours * 60 (1-min intervals)
     let socDataReceived = false; // Track if we received real SOC data
-    
+
     // Store previous values for blink detection
     let previousValues = {};
     let previousCellValues = {};
     let lastCellUpdateTime = 0;
-    
+
     // Battery cell communication state
     let hasCellData = false; // True only after receiving REAL data from MQTT
     let cellDataReceived = false; // Flag to track if we ever received cell data
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // EVENT LISTENERS
     // ========================================
-    
+
     // View button
     const viewBtn = document.getElementById('viewBtn');
     if (viewBtn) {
@@ -123,12 +123,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const cellSectionContent = document.getElementById('cellSectionContent');
     const toggleIcon = document.getElementById('toggleIcon');
     const toggleText = document.getElementById('toggleText');
-    
+
     if (cellSectionHeader && cellSectionContent) {
         cellSectionHeader.addEventListener('click', (e) => {
             // Ignore if clicking on reload button
             if (e.target.closest('#reloadCellBtn')) return;
-            
+
             const isCollapsed = cellSectionContent.classList.toggle('hidden');
             if (toggleIcon) {
                 toggleIcon.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-    
+
     // Reload cell data button
     const reloadCellBtn = document.getElementById('reloadCellBtn');
     if (reloadCellBtn) {
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function () {
         changeDeviceBtn.addEventListener('click', () => {
             const heroSection = document.getElementById('heroSection');
             const compactSearch = document.getElementById('compactSearch');
-            
+
             if (heroSection) {
                 heroSection.classList.remove('hidden');
             }
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-    
+
     // Compact date navigation
     const prevDayCompact = document.getElementById('prevDayCompact');
     const nextDayCompact = document.getElementById('nextDayCompact');
@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // CHART CONFIGURATION
     // ========================================
-    
+
     function configureChartDefaults() {
         Chart.defaults.font.family = "'Inter', 'Segoe UI', 'Helvetica', 'Arial', sans-serif";
         Chart.defaults.color = '#64748b';
@@ -199,19 +199,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         Chart.defaults.scale.grid.color = isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
         Chart.defaults.scale.ticks.color = isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)';
-        
+
         // Register custom tooltip positioner to prevent cutoff at chart edges
         Chart.Tooltip.positioners.edgeAware = function(elements, eventPosition) {
             if (!elements.length) return false;
-            
+
             const chart = this.chart;
             const chartArea = chart.chartArea;
             const tooltipWidth = 140;
             const padding = 20;
-            
+
             let x = elements[0].element.x;
             let y = elements[0].element.y;
-            
+
             // Adjust X if tooltip would overflow right edge
             if (x + tooltipWidth/2 > chartArea.right - padding) {
                 x = chartArea.right - tooltipWidth - padding;
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (x - tooltipWidth/2 < chartArea.left + padding) {
                 x = chartArea.left + tooltipWidth/2 + padding;
             }
-            
+
             return { x: x, y: y };
         };
     }
@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // SIGNALR CONNECTION
     // ========================================
-    
+
     function initializeSignalRConnection() {
         console.log("Initializing SignalR connection");
 
@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // DATA FETCHING
     // ========================================
-    
+
     function fetchData() {
         const deviceId = document.getElementById('deviceId')?.value?.trim();
         const date = document.getElementById('dateInput')?.value;
@@ -402,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 showCompactSearchBar(deviceId, date);
                 updateConnectionStatus('connected');
                 startDirectPolling(deviceId);
-                
+
                 // Fetch SOC timeline data from Lumentree API
                 fetchSOCData(deviceId, date);
             })
@@ -486,11 +486,13 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }, 20000);
     }
-    
+
+    let currentSocQueryDate = '';
+
     // Fetch SOC timeline data from lumentree.net API
-    function fetchSOCData(deviceId, date) {
-        const queryDate = date || document.getElementById('dateInput')?.value || new Date().toISOString().split('T')[0];
-        
+    function fetchSOCData(deviceId, date, isPolling = false) {
+        const queryDate = date || document.getElementById('dateInput')?.value || formatDate(new Date());
+
         fetch(`/device/${encodeURIComponent(deviceId)}/soc?date=${encodeURIComponent(queryDate)}`, {
             headers: { "ngrok-skip-browser-warning": "69420" }
         })
@@ -499,27 +501,76 @@ document.addEventListener('DOMContentLoaded', function () {
                 return response.json();
             })
             .then(data => {
+                const activeDeviceId = (currentDeviceId || document.getElementById('deviceId')?.value)?.trim()?.toUpperCase();
+                const activeDate = document.getElementById('dateInput')?.value || formatDate(new Date());
+                if (activeDeviceId && activeDeviceId !== (deviceId?.trim()?.toUpperCase() || '')) {
+                    return;
+                }
+                if (activeDate && activeDate !== queryDate) {
+                    return;
+                }
+
+                // Scoped by date and session: reset history on date change or initial load to prevent interleaving
+                if (!isPolling || currentSocQueryDate !== queryDate) {
+                    socHistory = [];
+                    currentSocQueryDate = queryDate;
+                }
+
                 console.log("SOC timeline data received:", data);
-                
+
                 // Get timeline array from response
-                const timeline = data?.timeline;
-                if (timeline && Array.isArray(timeline) && timeline.length > 0) {
+                const rawTimeline = data?.timeline || data?.history || [];
+                const timeline = Array.isArray(rawTimeline)
+                    ? rawTimeline.filter(Boolean).map(item => ({
+                        ...item,
+                        t: item?.t || item?.time || ''
+                    }))
+                    : [];
+                if (timeline.length > 0) {
                     // Load all SOC data points from timeline
                     loadSOCTimeline(timeline);
                     console.log(`Loaded ${timeline.length} SOC data points from Lumentree API`);
                 } else {
                     console.warn("No SOC timeline data available");
-                    showSOCUnavailableNotice();
+                    if (!isPolling || socHistory.length === 0) {
+                        updateSOCStats(null, null, null, 0);
+                        showSOCUnavailableNotice();
+                    }
                 }
             })
             .catch(error => {
+                const activeDeviceId = (currentDeviceId || document.getElementById('deviceId')?.value)?.trim()?.toUpperCase();
+                const activeDate = document.getElementById('dateInput')?.value || formatDate(new Date());
+                if (activeDeviceId && activeDeviceId !== (deviceId?.trim()?.toUpperCase() || '')) {
+                    return;
+                }
+                if (activeDate && activeDate !== queryDate) {
+                    return;
+                }
                 console.error("SOC data fetch error:", error);
-                showSOCUnavailableNotice();
+                if (!isPolling || socHistory.length === 0) {
+                    showSOCUnavailableNotice();
+                }
             });
     }
 
     function showSOCUnavailableNotice() {
-        const waitingDiv = document.getElementById('soc-waiting');
+        if (socChart) {
+            socChart.destroy();
+            socChart = null;
+        }
+        let waitingDiv = document.getElementById('soc-waiting');
+        if (!waitingDiv) {
+            const ctx = document.getElementById('socChart');
+            const container = ctx?.parentElement;
+            if (container) {
+                waitingDiv = document.createElement('div');
+                waitingDiv.id = 'soc-waiting';
+                waitingDiv.className = 'absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-emerald-50/90 to-green-50/90 dark:from-emerald-900/40 dark:to-green-900/40 rounded-lg';
+                container.style.position = 'relative';
+                container.appendChild(waitingDiv);
+            }
+        }
         if (waitingDiv) {
             waitingDiv.innerHTML = `
                 <div class="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400">
@@ -533,23 +584,37 @@ document.addEventListener('DOMContentLoaded', function () {
             if (window.lucide) lucide.createIcons();
         }
     }
-    
+
     // Load SOC timeline data into chart
     function loadSOCTimeline(timeline) {
-        // Clear existing data
-        socHistory = [];
-        
-        // Add all data points from timeline
+        // Merge data points from timeline without dropping accumulated real-time points
         timeline.forEach(item => {
-            if (item.soc !== undefined && item.soc !== null && item.t) {
-                socHistory.push({
-                    time: item.t,
-                    soc: item.soc,
-                    timestamp: Date.now()
-                });
+            let timeLabel = String(item?.t || item?.time || '');
+            const socVal = Number(item?.soc);
+            if (item && item.soc !== undefined && item.soc !== null && !Number.isNaN(socVal) && timeLabel) {
+                // Normalize HH:mm format if needed (pad single-digit hour, strip seconds, ignore leading date)
+                const match = timeLabel.match(/(?:^|\s|T)(\d{1,2}):(\d{2})/);
+                if (match) {
+                    timeLabel = `${match[1].padStart(2, '0')}:${match[2]}`;
+                } else if (!/^\d{2}:\d{2}$/.test(timeLabel)) {
+                    return;
+                }
+                const existingIdx = socHistory.findIndex(p => p.time === timeLabel);
+                if (existingIdx >= 0) {
+                    socHistory[existingIdx].soc = socVal;
+                    socHistory[existingIdx].timestamp = Date.now();
+                } else {
+                    socHistory.push({
+                        time: timeLabel,
+                        soc: socVal,
+                        timestamp: Date.now()
+                    });
+                }
             }
         });
-        
+
+        socHistory.sort((a, b) => a.time.localeCompare(b.time));
+
         if (socHistory.length > 0) {
             socDataReceived = true;
             updateSOCChartRealTime();
@@ -587,7 +652,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // DATA PROCESSING
     // ========================================
-    
+
     function processData(data, isPolling = false) {
         // Show all sections including batteryCellSection
         showElement('deviceInfo');
@@ -608,12 +673,31 @@ document.addEventListener('DOMContentLoaded', function () {
         updateDeviceInfo(data.deviceInfo);
 
         // Update summary stats (convert from 0.1kWh to kWh)
-        updateValue('pv-total', ((data.pv?.tableValue ?? 0) / 10).toFixed(1) + ' kWh');
+        const pvKwh = ((data.pv?.tableValue ?? 0) / 10);
+        updateValue('pv-total', pvKwh.toFixed(1) + ' kWh');
         updateValue('bat-charge', (((data.bat?.bats?.[0]?.tableValue) ?? 0) / 10).toFixed(1) + ' kWh');
         updateValue('bat-discharge', (((data.bat?.bats?.[1]?.tableValue) ?? 0) / 10).toFixed(1) + ' kWh');
-        updateValue('load-total', ((data.load?.tableValue ?? 0) / 10).toFixed(1) + ' kWh');
+
+        let loadKwh = ((data.load?.tableValue ?? 0) / 10);
+        let essKwh = ((data.essentialLoad?.tableValue ?? 0) / 10);
+        if (loadKwh === 0 && essKwh > 0) {
+            // Hệ hòa lưới bám tải Lumentree ghi nhận tổng tải tiêu thụ gia đình ở essentialLoad
+            loadKwh = essKwh;
+            if (!data.load) data.load = {};
+            data.load.tableValue = data.essentialLoad?.tableValue ?? 0;
+            if (!data.load?.tableValueInfo?.length && data.essentialLoad?.tableValueInfo?.length) {
+                data.load.tableValueInfo = [...data.essentialLoad.tableValueInfo];
+            }
+        }
+        updateValue('load-total', loadKwh.toFixed(1) + ' kWh');
         updateValue('grid-total', ((data.grid?.tableValue ?? 0) / 10).toFixed(1) + ' kWh');
-        updateValue('essential-total', ((data.essentialLoad?.tableValue ?? 0) / 10).toFixed(1) + ' kWh');
+        updateValue('essential-total', essKwh.toFixed(1) + ' kWh');
+
+        // Cập nhật phụ đề header PV: X.X kWh/Ngày chuẩn App Android
+        const pvHeaderEl = document.getElementById('pvDailyHeader');
+        if (pvHeaderEl) {
+            pvHeaderEl.textContent = `PV: ${pvKwh.toFixed(1)}kWh/Ngày`;
+        }
 
         // Cập nhật ngay các thẻ Luồng Năng Lượng Thời Gian Thực nếu API trả về số liệu tức thời
         if (data.realtimeData && data.realtimeData.data) {
@@ -683,25 +767,45 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // REAL-TIME DISPLAY UPDATE
     // ========================================
-    
+
     function updateRealTimeDisplay(data) {
-        // PV - with blink effect
-        updateValue('pv-power', `${data.pvTotalPower}W`);
-        if (data.pv2Power) {
+        // PV - with blink effect (chuẩn App Android: ban đêm không có nắng hiển thị --W và --V)
+        const pvPower = (data.pvTotalPower !== undefined && data.pvTotalPower !== null)
+            ? data.pvTotalPower
+            : ((data.pv1Power || 0) + (data.pv2Power || 0));
+        if (pvPower === 0) {
+            updateValue('pv-power', '--W');
+            let pvDesc = '--V';
+            const v1 = data.pv1Voltage || 0;
+            const v2 = data.pv2Voltage || 0;
+            if (v2 > 0) {
+                pvDesc = `${v1}V | ${v2}V`;
+            } else if (v1 > 0) {
+                pvDesc = `${v1}V`;
+            }
+            updateValue('pv-desc', pvDesc);
+        } else if (data.pv2Power || data.pv2Voltage > 0) {
+            const p1 = Number(data.pv1Power) || 0;
+            const v1 = Number(data.pv1Voltage) || 0;
+            const p2 = Number(data.pv2Power) || 0;
+            const v2 = Number(data.pv2Voltage) || 0;
+            updateValue('pv-power', `${pvPower}W`);
             updateValueHTML('pv-desc', `
-                <span class="hidden sm:inline text-amber-500">S1:</span> 
-                <span class="text-amber-400 font-bold text-[11px] sm:text-sm">${data.pv1Power}W</span> 
-                <span class="text-[9px] sm:text-xs text-gray-400">${data.pv1Voltage}V</span> 
-                <span class="text-gray-500 mx-0.5">|</span> 
-                <span class="hidden sm:inline text-amber-500">S2:</span> 
-                <span class="text-amber-400 font-bold text-[11px] sm:text-sm">${data.pv2Power}W</span> 
-                <span class="text-[9px] sm:text-xs text-gray-400">${data.pv2Voltage}V</span>
+                <span class="hidden sm:inline text-amber-500">S1:</span>
+                <span class="text-amber-400 font-bold text-[11px] sm:text-sm">${p1}W</span>
+                <span class="text-[9px] sm:text-xs text-gray-400">${v1}V</span>
+                <span class="text-gray-500 mx-0.5">|</span>
+                <span class="hidden sm:inline text-amber-500">S2:</span>
+                <span class="text-amber-400 font-bold text-[11px] sm:text-sm">${p2}W</span>
+                <span class="text-[9px] sm:text-xs text-gray-400">${v2}V</span>
             `);
         } else {
-            updateValue('pv-desc', `${data.pv1Voltage}V`);
+            updateValue('pv-power', `${pvPower}W`);
+            const pvDesc = data.pv1Voltage > 0 ? `${data.pv1Voltage}V` : '--V';
+            updateValue('pv-desc', pvDesc);
         }
 
-        // Cập nhật 2 đầu vào quang điện (MPPT 1 & MPPT 2) tương tự App Android Lumentree
+        // Cập nhật 2 đầu vào quang điện (MPPT 1 & MPPT 2) chuẩn App Android Lumentree (--V, --W, --A khi không có nắng)
         const pv1V = data.pv1Voltage || 0;
         const pv1P = data.pv1Power || 0;
         let pv1I = '0.0';
@@ -720,15 +824,22 @@ document.addEventListener('DOMContentLoaded', function () {
             pv2I = (pv2P / pv2V).toFixed(1);
         }
 
-        const totalPvLive = data.pvTotalPower || (pv1P + pv2P);
-        updateValue('pv-total-live', `${totalPvLive} W`);
-        updateValue('pv1-voltage', `${pv1V} V`);
-        updateValue('pv1-power', `${pv1P} W`);
-        updateValue('pv1-current', `${pv1I} A`);
+        const totalPvLive = pvPower || (pv1P + pv2P);
+        const formatMpptPower = (power, totalLive) => {
+            if (power > 0) return `${power} W`;
+            if (totalLive === 0) return '--W';
+            return '0 W';
+        };
+        const formatMpptCurrent = (currentStr) => (parseFloat(currentStr) > 0 ? `${currentStr} A` : '--A');
 
-        updateValue('pv2-voltage', `${pv2V} V`);
-        updateValue('pv2-power', `${pv2P} W`);
-        updateValue('pv2-current', `${pv2I} A`);
+        updateValue('pv-total-live', totalPvLive > 0 ? `${totalPvLive} W` : `--W`);
+        updateValue('pv1-voltage', pv1V > 0 ? `${pv1V} V` : `--V`);
+        updateValue('pv1-power', formatMpptPower(pv1P, totalPvLive));
+        updateValue('pv1-current', formatMpptCurrent(pv1I));
+
+        updateValue('pv2-voltage', pv2V > 0 ? `${pv2V} V` : `--V`);
+        updateValue('pv2-power', formatMpptPower(pv2P, totalPvLive));
+        updateValue('pv2-current', formatMpptCurrent(pv2I));
 
         // Grid - with blink effect
         updateValue('grid-power', `${data.gridValue}W`);
@@ -736,10 +847,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Battery
         const batteryPercent = data.batteryPercent || 0;
-        
+
         // Update battery percent display in icon - with blink
         updateValue('battery-percent-icon', `${batteryPercent}%`);
-        
+
         // Update battery fill level - horizontal bar like phone battery
         const batteryFill = document.getElementById('battery-fill');
         if (batteryFill) {
@@ -753,7 +864,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 batteryFill.className = 'absolute left-0 top-0 bottom-0 bg-green-500 transition-all duration-500';
             }
         }
-        
+
         // Update battery status text - with blink
         if (data.batteryStatus === "Discharging") {
             updateValueHTML('battery-status-text', `<span class="text-red-500">Đang xả</span>`);
@@ -762,12 +873,15 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             updateValueHTML('battery-status-text', `<span class="text-slate-500">Chờ</span>`);
         }
-        
-        // Battery power - with blink
+
+        // Battery power - with blink (chuẩn App Android: hiển thị số dương công suất kèm trạng thái)
+        const batWatts = Math.abs(Number(data.batteryValue) || 0);
         if (data.batteryStatus === "Discharging") {
-            updateValueHTML('battery-power', `<span class="text-red-600 dark:text-red-400">-${Math.abs(data.batteryValue)}W</span>`);
+            updateValueHTML('battery-power', `<span class="text-amber-500 dark:text-amber-400 font-bold">${batWatts}W</span>`);
+        } else if (data.batteryStatus === "Charging") {
+            updateValueHTML('battery-power', `<span class="text-green-600 dark:text-green-400 font-bold">+${batWatts}W</span>`);
         } else {
-            updateValueHTML('battery-power', `<span class="text-green-600 dark:text-green-400">+${Math.abs(data.batteryValue)}W</span>`);
+            updateValueHTML('battery-power', `<span class="text-slate-600 dark:text-slate-300 font-bold">${batWatts}W</span>`);
         }
 
         if (batteryPercent > 0) {
@@ -776,14 +890,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateSOCStats(batteryPercent, batteryPercent, batteryPercent, socHistory.length);
             }
         }
-        
+
         // Battery Voltage (Điện Áp Pin giao tiếp) - display in Cell section
         if (data.batteryVoltage) {
             updateValue('batteryVoltageDisplay', `${data.batteryVoltage.toFixed(1)}V`);
         }
 
-        // Other values - with blink effect
-        updateValue('device-temp', `${data.deviceTempValue}°C`);
+        // Other values - with blink effect (chuẩn App Android: hiển thị cả °C và °F)
+        const parsedTemp = parseFloat(data.deviceTempValue);
+        const tempC = Number.isFinite(parsedTemp) ? parsedTemp : null;
+        const tempStr = tempC !== null ? `${tempC}°C(${Math.round(tempC * 9 / 5 + 32)}°F)` : '--';
+        updateValue('device-temp', tempStr);
+        updateValue('device-temp-info', tempStr);
         updateValue('essential-power', `${data.essentialValue}W`);
         updateValue('load-power', `${data.loadValue}W`);
 
@@ -793,44 +911,45 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // Update flow statuses
-        updateFlowStatus('pv-flow', data.pvTotalPower > 0);
+        updateFlowStatus('pv-flow', pvPower > 0);
         updateFlowStatus('grid-flow', data.gridValue > 0);
         updateFlowStatus('battery-flow', data.batteryValue !== 0);
         updateFlowStatus('essential-flow', data.essentialValue > 0);
         updateFlowStatus('load-flow', data.loadValue > 0);
-        
+
         // Update last refresh time with blink
         const now = new Date();
         const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
         updateValue('lastUpdateTime', `Cập nhật: ${timeStr}`);
-        
-        // Update SOC history for real-time chart - PER MINUTE UPDATES
-        if (batteryPercent > 0) {
+
+        // Update SOC history for real-time chart - PER MINUTE UPDATES (only when viewing today)
+        const isViewingToday = (document.getElementById('dateInput')?.value || formatDate(new Date())) === formatDate(new Date());
+        if (batteryPercent > 0 && isViewingToday) {
             const now = new Date();
             const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-            
+
             // Check if we should add this data point (avoid duplicates within same minute)
             const lastEntry = socHistory.length > 0 ? socHistory[socHistory.length - 1] : null;
             const shouldAddPoint = !lastEntry || lastEntry.time !== timeStr;
-            
+
             if (shouldAddPoint) {
                 // Mark that we received real SOC data
                 socDataReceived = true;
-                
+
                 // Add new data point
                 socHistory.push({
                     time: timeStr,
                     soc: batteryPercent,
                     timestamp: now.getTime()
                 });
-                
+
                 // Keep only last MAX_SOC_HISTORY points (24 hours of per-minute data)
                 if (socHistory.length > MAX_SOC_HISTORY) {
                     socHistory = socHistory.slice(-MAX_SOC_HISTORY);
                 }
-                
+
                 console.log(`SOC updated: ${batteryPercent}% at ${timeStr} (${socHistory.length} points)`);
-                
+
                 // Update SOC chart with real-time data
                 updateSOCChartRealTime();
             } else {
@@ -846,7 +965,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // BATTERY CELL DISPLAY
     // ========================================
-    
+
     // Initialize battery cells with waiting message (always visible, no mock data)
     function initializeBatteryCellsWaiting() {
         if (cellWaitingTimeout) {
@@ -863,7 +982,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const cellDiffValue = document.getElementById('cellDiffValue');
         const cellCountBadge = document.getElementById('cellCountBadge');
         const cellUpdateTime = document.getElementById('cellUpdateTime');
-        
+
         if (cellDayMax) cellDayMax.textContent = '--';
         if (cellAvg) cellAvg.textContent = '--';
         if (cellMax) cellMax.textContent = '--';
@@ -874,10 +993,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (cellCountBadge) cellCountBadge.textContent = '-- cell';
         if (cellUpdateTime) cellUpdateTime.textContent = '--:--:--';
-        
+
         // Reset day max tracker
         previousValues['cellDayMax_value'] = '0';
-        
+
         // Show waiting message in cell grid
         const cellGrid = document.getElementById('cellGrid');
         if (cellGrid) {
@@ -911,7 +1030,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }, 6000);
         }
-        
+
         console.log("Battery cell section initialized - waiting for real MQTT data");
     }
 
@@ -923,17 +1042,17 @@ document.addEventListener('DOMContentLoaded', function () {
             reloadBtn.classList.add('animate-spin');
             setTimeout(() => reloadBtn.classList.remove('animate-spin'), 1000);
         }
-        
+
         // Request new cell data from server
         if (connection && connection.state === "Connected" && currentDeviceId) {
             connection.invoke("RequestBatteryCellData", currentDeviceId)
                 .then(() => console.log("Requested cell data reload"))
                 .catch(err => console.error("Cell reload error:", err));
         }
-        
+
         console.log("Cell data reload requested");
     }
-    
+
     // Update cell update time display
     function updateCellUpdateTime() {
         const now = new Date();
@@ -962,13 +1081,13 @@ document.addEventListener('DOMContentLoaded', function () {
             showNoCellCommunication();
             return;
         }
-        
+
         // Mark that we have received real cell data
         cellDataReceived = true;
         hasCellData = true;
-        
+
         console.log("Received real cell data from MQTT:", validCells.length, "cells");
-        
+
         // Update cell update time
         updateCellUpdateTime();
 
@@ -977,7 +1096,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const max = Math.max(...validCells);
         const min = Math.min(...validCells);
         const diff = max - min;
-        
+
         // Update cell count badge
         const cellCountBadge = document.getElementById('cellCountBadge');
         if (cellCountBadge) {
@@ -989,7 +1108,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updateValue('cellMax', max.toFixed(3) + 'V');
         updateValue('cellMin', min.toFixed(3) + 'V');
         updateValue('cellDiffValue', diff.toFixed(3) + 'V');
-        
+
         // Update day max voltage from API data (if available)
         if (data.maximumVoltage) {
             updateValue('cellDayMax', data.maximumVoltage.toFixed(3) + 'V');
@@ -1001,7 +1120,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 updateValue('cellDayMax', max.toFixed(3) + 'V');
             }
         }
-        
+
         // Update diff color
         const diffEl = document.getElementById('cellDiffValue');
         if (diffEl) {
@@ -1014,7 +1133,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 diffEl.classList.add('text-green-600', 'dark:text-green-400');
             }
         }
-        
+
         // Track update time for communication status
         const currentTime = Date.now();
         lastCellUpdateTime = currentTime;
@@ -1023,16 +1142,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const cellGrid = document.getElementById('cellGrid');
         if (cellGrid) {
             let gridHtml = '<div class="grid">';
-            
+
             cells.forEach((voltage, index) => {
                 const cellKey = `cell_${index}`;
                 const prevVoltage = previousCellValues[cellKey];
                 const hasChanged = prevVoltage !== undefined && prevVoltage !== voltage;
                 previousCellValues[cellKey] = voltage;
-                
+
                 // Check communication status (voltage = 0 means no communication)
                 const noCommunication = voltage === 0 || voltage === null || voltage === undefined;
-                
+
                 if (noCommunication) {
                     // Cell has no communication
                     gridHtml += `
@@ -1045,7 +1164,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     const deviation = Math.abs(voltage - avg);
                     let colorClass = 'cell-default';
-                    
+
                     if (deviation < 0.02) {
                         colorClass = 'cell-good';
                     } else if (deviation < 0.05) {
@@ -1053,10 +1172,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     } else {
                         colorClass = 'cell-warning';
                     }
-                    
+
                     // Add blink class if value changed
                     const blinkClass = hasChanged ? 'cell-blink' : '';
-                    
+
                     gridHtml += `
                         <div class="cell-item ${colorClass} ${blinkClass}">
                             <span class="cell-label">C${index + 1}</span>
@@ -1065,20 +1184,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     `;
                 }
             });
-            
+
             gridHtml += '</div>';
-            
+
             // Add communication status indicator
-            const commStatus = validCells.length === cells.length ? 
-                '<span class="text-green-500">✓ Tất cả cell đang giao tiếp</span>' : 
+            const commStatus = validCells.length === cells.length ?
+                '<span class="text-green-500">✓ Tất cả cell đang giao tiếp</span>' :
                 `<span class="text-amber-500">⚠ ${cells.length - validCells.length} cell mất kết nối</span>`;
-            
+
             gridHtml += `<div class="text-center mt-2 text-xs">${commStatus}</div>`;
-            
+
             cellGrid.innerHTML = gridHtml;
         }
     }
-    
+
     // Show message when device doesn't support cell monitoring
     function showNoCellCommunication() {
         const cellGrid = document.getElementById('cellGrid');
@@ -1095,7 +1214,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             `;
         }
-        
+
         // Reset stats
         const cellCountBadge = document.getElementById('cellCountBadge');
         if (cellCountBadge) cellCountBadge.textContent = 'N/A';
@@ -1104,23 +1223,23 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // SOC CHART - DATA FROM LUMENTREE API
     // ========================================
-    
+
     // Start polling SOC data every 5 minutes (to get new data points)
     function startSOCPolling(deviceId) {
         // Clear any existing interval
         if (socPollingInterval) {
             clearInterval(socPollingInterval);
         }
-        
+
         // Poll every 5 minutes (300 seconds) to get new SOC data
         socPollingInterval = setInterval(() => {
             const date = document.getElementById('dateInput')?.value;
-            fetchSOCData(deviceId, date);
+            fetchSOCData(deviceId, date, true);
         }, 300000); // 5 minutes
-        
+
         console.log("SOC polling started - every 5 minutes");
     }
-    
+
     // Stop SOC polling
     function stopSOCPolling() {
         if (socPollingInterval) {
@@ -1129,25 +1248,25 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log("SOC polling stopped");
         }
     }
-    
+
     // Initialize SOC chart with waiting message - NO MOCK DATA
     function initializeSOCChartWaiting() {
         const ctx = document.getElementById('socChart');
         if (!ctx) return;
-        
+
         // Reset SOC data for new device
         socHistory = [];
         socDataReceived = false;
-        
+
         // Stop any existing polling
         stopSOCPolling();
-        
+
         // Destroy existing chart if any
         if (socChart) {
             socChart.destroy();
             socChart = null;
         }
-        
+
         // Show waiting message in chart container
         const container = ctx.parentElement;
         if (container) {
@@ -1171,13 +1290,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 container.appendChild(waitingDiv);
             }
         }
-        
+
         // Reset stats display
         updateSOCStats(0, 0, 0, 0);
-        
+
         console.log("SOC chart initialized - waiting for real MQTT data (no mock data)");
     }
-    
+
     // Hide waiting message and show chart
     function hideSOCWaitingMessage() {
         const waitingDiv = document.getElementById('soc-waiting');
@@ -1185,25 +1304,25 @@ document.addEventListener('DOMContentLoaded', function () {
             waitingDiv.remove();
         }
     }
-    
+
     // Update SOC chart with real-time data from SignalR - PER MINUTE
     function updateSOCChartRealTime() {
         const ctx = document.getElementById('socChart');
         if (!ctx) return;
-        
+
         if (socHistory.length === 0) return;
-        
+
         // Hide waiting message when we have data
         hideSOCWaitingMessage();
-        
+
         const labels = socHistory.map(item => item.time);
         const values = socHistory.map(item => item.soc);
-        
+
         // Calculate current SOC stats
         const currentSOC = values[values.length - 1];
         const maxSOC = Math.max(...values);
         const minSOC = Math.min(...values);
-        
+
         if (socChart) {
             // Update existing chart data
             socChart.data.labels = labels;
@@ -1310,24 +1429,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-        
+
         // Update SOC stats display
         updateSOCStats(currentSOC, maxSOC, minSOC, socHistory.length);
     }
-    
+
     // Update SOC statistics display
     function updateSOCStats(current, max, min, dataPoints) {
         const currentEl = document.getElementById('soc-current');
         const maxEl = document.getElementById('soc-max');
         const minEl = document.getElementById('soc-min');
         const pointsEl = document.getElementById('soc-points');
-        
+
         if (currentEl) currentEl.textContent = (typeof current === 'number' && (current > 0 || dataPoints > 0)) ? `${current}%` : '--%';
         if (maxEl) maxEl.textContent = (typeof max === 'number' && (max > 0 || dataPoints > 0)) ? `${max}%` : '--%';
         if (minEl) minEl.textContent = (typeof min === 'number' && (min > 0 || dataPoints > 0)) ? `${min}%` : '--%';
         if (pointsEl) pointsEl.textContent = dataPoints > 0 ? `${dataPoints}` : '0';
     }
-    
+
     // Legacy function for SignalR SOC data (if API sends history)
     function updateSOCChart(data) {
         if (!data || !data.history) return;
@@ -1341,7 +1460,7 @@ document.addEventListener('DOMContentLoaded', function () {
             soc: item.soc,
             timestamp: Date.now()
         }));
-        
+
         socDataReceived = true;
         updateSOCChartRealTime();
     }
@@ -1349,7 +1468,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // CHARTS
     // ========================================
-    
+
     function updateCharts(data) {
         const timeLabels = generateTimeLabels();
 
@@ -1480,7 +1599,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // DATA PROCESSING HELPERS
     // ========================================
-    
+
     function generateTimeLabels() {
         const labels = [];
         for (let hour = 0; hour < 24; hour++) {
@@ -1508,7 +1627,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // UTILITY FUNCTIONS
     // ========================================
-    
+
     function formatDate(date) {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -1545,7 +1664,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (element) {
             const oldValue = previousValues[elementId];
             const newValue = String(value);
-            
+
             // Only blink if value actually changed
             if (oldValue !== newValue) {
                 element.textContent = value;
@@ -1554,20 +1673,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 void element.offsetWidth;
                 element.classList.add('value-updated');
                 previousValues[elementId] = newValue;
-                
+
                 // Remove class after animation completes
                 setTimeout(() => element.classList.remove('value-updated'), 600);
             }
         }
     }
-    
+
     // Update value with innerHTML and blink effect
     function updateValueHTML(elementId, html) {
         const element = document.getElementById(elementId);
         if (element) {
             const oldHTML = previousValues[elementId + '_html'];
             const newHTML = String(html);
-            
+
             // Only blink if value actually changed
             if (oldHTML !== newHTML) {
                 element.innerHTML = html;
@@ -1575,7 +1694,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 void element.offsetWidth;
                 element.classList.add('value-updated');
                 previousValues[elementId + '_html'] = newHTML;
-                
+
                 setTimeout(() => element.classList.remove('value-updated'), 600);
             }
         }
@@ -1620,7 +1739,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
     // AUTO REFRESH
     // ========================================
-    
+
     setInterval(() => {
         const deviceId = document.getElementById('deviceId')?.value?.trim();
         if (deviceId) {
